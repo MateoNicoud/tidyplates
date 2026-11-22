@@ -109,17 +109,21 @@ do
 	-- Local References
 	local WorldGetNumChildren, WorldGetChildren = WorldFrame.GetNumChildren, WorldFrame.GetChildren
 
-	-- HideBlizzardFrame: keeps Blizzard's own nameplate UnitFrame hidden under the Tidy Plates one.
-	-- The client may re-show it on its own updates, so hook Show once per frame.
+	-- HideBlizzardFrame: keeps Blizzard's own nameplate UnitFrame invisible under the Tidy Plates one.
+	-- Uses alpha, not Hide(): the UnitFrame can be protected, and hiding it taints the UI.
+	-- The client resets it on its own updates, so hook Show/SetAlpha once per frame (post-hooks are taint-safe).
+	local function KeepInvisible(plate, blizzFrame)
+		if plate.extended and plate.extended.Active and blizzFrame:GetAlpha() > 0 then blizzFrame:SetAlpha(0) end
+	end
+
 	function HideBlizzardFrame(plate)
 		local blizzFrame = plate.UnitFrame or plate:GetChildren()
 		if not blizzFrame or blizzFrame == plate.carrier then return end
-		blizzFrame:Hide()
+		blizzFrame:SetAlpha(0)
 		if not blizzFrame.tidyHooked then
 			blizzFrame.tidyHooked = true
-			hooksecurefunc(blizzFrame, "Show", function(self)
-				if plate.extended and plate.extended.Active then self:Hide() end
-			end)
+			hooksecurefunc(blizzFrame, "Show", function(self) KeepInvisible(plate, self) end)
+			hooksecurefunc(blizzFrame, "SetAlpha", function(self) KeepInvisible(plate, self) end)
 		end
 	end
 
@@ -407,6 +411,10 @@ do
 		if not (plate and plate.carrier and plate.extended) then return end
 		--plate.extended:Hide()
 		plate.carrier:Hide()
+
+		-- Give the Blizzard frame back (the plate may be reused for a unit we do not theme)
+		local blizzFrame = plate.UnitFrame or plate:GetChildren()
+		if blizzFrame and blizzFrame ~= plate.carrier then plate.extended.Active = false; blizzFrame:SetAlpha(1) end
 
 		UpdateReferences(plate)
 
@@ -1099,6 +1107,7 @@ do
 
 	local function SetObjectFont(object,  font, size, flags)
 		if (not OverrideFonts) and font then
+			if flags == "NONE" then flags = "" end	-- this client rejects "NONE"
 			object:SetFont(font, size or 10, flags)
 		--else
 		--	object:SetFontObject("SpellFont_Small")
