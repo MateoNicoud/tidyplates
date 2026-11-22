@@ -28,9 +28,10 @@ end
 local function IsPlayerTank()
 --[[
 	-- Look at the Player's Specialization
-	local specializationIndex = tonumber(GetSpecialization())
+	-- Forever has no specializations: these APIs may be absent
+	local specializationIndex = GetSpecialization and tonumber(GetSpecialization())
 
-	if specializationIndex and GetSpecializationRole(specializationIndex) == "TANK" then
+	if specializationIndex and GetSpecializationRole and GetSpecializationRole(specializationIndex) == "TANK" then
 		playerTankRole = true
 	else
 		playerTankRole = false
