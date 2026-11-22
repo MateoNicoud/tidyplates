@@ -18,6 +18,7 @@ with or branch on them. Pass them only to widget APIs (`StatusBar:SetValue`, `Se
 
 - The core stores raw health on `extended` (`healthRaw`, `healthmaxRaw`) for the bar only. `unit.health` and `unit.healthmax` hold plain
   numbers (1 and 1 when secret), because the core compares `unit` against its cache and the Hub compares health.
+- Health percent comes from `UnitHealthPercent(unit, true, CurveConstants.ScaleTo100)`. When Lua can read it, `unit.health`/`unit.healthmax` become that percent and 100. When it is still secret, `unit.healthSecret` is true and the Hub asks the core for widget-side results: `TidyPlates.GetSecretHealthPercent(unit)` for `string.format` into text, `TidyPlates.RequestHealthStep(unit, "alpha"|"scale", threshold, below)` for the low-health rule (a step curve passed to `SetAlpha`/`SetScale`). Colour by health and exact-number text cannot work on a secret unit. Unverified in game until issue #10 is tested.
 - Cast timing comes from `UnitCastingDuration` / `UnitChannelDuration` driving the bar with `SetTimerDuration`.
 - Addon code and slash commands cannot read secret auras (`GetAuraDataByIndex`, `GetUnitAuras` are refused). The client has
   `CustomAuraContainerTemplate` (an `AuraContainer` it fills and draws); the Aura Widget builds one per Plate and only configures it (filter string, max count, sort, growth, button look), so Hub aura filters by name, type or caster no longer apply. Tank Track reads the player's own auras with `C_UnitAuras.GetPlayerAuraBySpellID`.

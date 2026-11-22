@@ -110,36 +110,49 @@ local function GetHealthMax(unit)
 	--else return nil end
 end
 
+-- Percent as text. On a secret unit the percent only goes through string.format into FontString:SetText.
+local function PercentText(unit)
+	if unit.healthSecret then
+		local pct = TidyPlates.GetSecretHealthPercent(unit)
+		return pct ~= nil and string.format("%.0f%%", pct) or ""
+	end
+	return ceil(100*(unit.health/unit.healthmax)).."%"
+end
+
 -- None
 local function HealthFunctionNone() return "" end
 
 -- Percent
 local function TextHealthPercentColored(unit)
 	local color = ColorFunctionByHealth(unit)
-	return ceil(100*(unit.health/unit.healthmax)).."%", color.r, color.g, color.b, .7
+	return PercentText(unit), color.r, color.g, color.b, .7
 end
 
 local function HealthFunctionPercent(unit)
-	if unit.health < unit.healthmax then
+	if unit.healthSecret or unit.health < unit.healthmax then
 		return TextHealthPercentColored(unit)
 	else return "" end
 end
 
 -- Actual
 local function HealthFunctionExact(unit)
+	if unit.healthSecret then return "" end
 	return SepThousands(GetHealth(unit))
 end
 -- Approximate
 local function HealthFunctionApprox(unit)
+	if unit.healthSecret then return "" end
 	return ShortenNumber(GetHealth(unit))
 end
 -- Approximate
 local function HealthFunctionApproxAndPercent(unit)
 	local color = ColorFunctionByHealth(unit)
-	return HealthFunctionApprox(unit).."  ("..ceil(100*(unit.health/unit.healthmax)).."%)", color.r, color.g, color.b, .7
+	if unit.healthSecret then return PercentText(unit), color.r, color.g, color.b, .7 end
+	return HealthFunctionApprox(unit).."  ("..PercentText(unit)..")", color.r, color.g, color.b, .7
 end
 --Deficit
 local function HealthFunctionDeficit(unit)
+	if unit.healthSecret then return "" end
 	local health, healthmax = GetHealth(unit), GetHealthMax(unit)
 	if health and healthmax and (health ~= healthmax) then return "-"..SepThousands(healthmax - health) end
 end
@@ -147,8 +160,9 @@ end
 local function HealthFunctionTotal(unit)
 	local color = ColorFunctionByHealth(unit)
 	--local color = White
-	local health, healthmax = GetHealth(unit), GetHealthMax(unit)
-	return ShortenNumber(health).."|cffffffff ("..ceil(100*(unit.health/unit.healthmax)).."%)", color.r, color.g, color.b
+	if unit.healthSecret then return PercentText(unit), color.r, color.g, color.b end
+	local health = GetHealth(unit)
+	return ShortenNumber(health).."|cffffffff ("..PercentText(unit)..")", color.r, color.g, color.b
 end
 -- TargetOf
 local function HealthFunctionTargetOf(unit)

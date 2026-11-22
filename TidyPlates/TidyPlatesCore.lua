@@ -96,6 +96,60 @@ local ForEachPlate, HideBlizzardFrame
 -- IsSecret: true for values the client hides from addon code (nil-safe on clients without the concept)
 local function IsSecret(value) return issecretvalue and issecretvalue(value) or false end
 
+-- GetHealthPercent: 0-100 through the client's percent API (the result may itself be secret); nil if unavailable
+local function GetHealthPercent(unitid)
+	if not UnitHealthPercent then return nil end
+	local scale = CurveConstants and CurveConstants.ScaleTo100
+	if scale then return UnitHealthPercent(unitid, true, scale) end
+	return UnitHealthPercent(unitid, true)
+end
+
+-- Step curves for ApplyHealthStep, one per threshold/below/above combination
+local stepCurves = {}
+local function GetStepCurve(threshold, below, above)
+	local key = threshold..":"..below..":"..above
+	local curve = stepCurves[key]
+	if curve == nil then
+		curve = false
+		if C_CurveUtil and C_CurveUtil.CreateCurve and Enum and Enum.LuaCurveType then
+			curve = C_CurveUtil.CreateCurve()
+			curve:SetType(Enum.LuaCurveType.Step)
+			curve:AddPoint(0, below)
+			curve:AddPoint(threshold * 100, above)
+		end
+		stepCurves[key] = curve
+	end
+	return curve
+end
+
+-- TidyPlates.RequestHealthStep(unit, "alpha"|"scale", threshold, below)
+-- For a unit whose health percent is secret: asks the core to show `below` under the threshold (0-1) and the normal
+-- value otherwise. The core applies it after the Theme's own alpha/scale, by handing the secret percent to the
+-- client's curve and the result to the widget. Returns false if the unit is not secret or the client lacks curves.
+function TidyPlates.RequestHealthStep(unit, kind, threshold, below)
+	local frame = unit.frame
+	if not (frame and unit.healthSecret and frame.healthPercentRaw ~= nil and UnitHealthPercent) then return false end
+	frame.healthStep = frame.healthStep or {}
+	frame.healthStep[kind] = {threshold, below}
+	return true
+end
+
+-- ApplyHealthSteps: runs the requests above for one plate; normal is the value used at or over the threshold
+local function ApplyHealthStep(frame, unitid, kind, normal)
+	local request = frame.healthStep and frame.healthStep[kind]
+	if not request then return end
+	frame.healthStep[kind] = nil
+	local curve = GetStepCurve(request[1], request[2], normal)
+	if not curve then return end
+	local value = UnitHealthPercent(unitid, true, curve)
+	if kind == "alpha" then frame:SetAlpha(value) else frame:SetScale(value) end
+end
+
+-- TidyPlates.GetSecretHealthPercent(unit): the secret percent, for FontString:SetText only
+function TidyPlates.GetSecretHealthPercent(unit)
+	return unit.frame and unit.frame.healthPercentRaw
+end
+
 local function UpdateReferences(plate)
 	nameplate = plate
 	extended = plate.extended
@@ -604,11 +658,22 @@ do
 		unit.reaction = GetReactionByColor(unit.red, unit.green, unit.blue) or "HOSTILE"
 
 		-- Raw values go to the health bar only. On enemy units the client returns "secret" numbers that
-		-- Lua cannot compare, so everything else sees plain full-health values instead.
+		-- Lua cannot compare, so everything else sees plain values instead: the percent from the client's
+		-- percent API when it is readable, otherwise full-health placeholders plus unit.healthSecret.
 		extended.healthRaw = UnitHealth(unitid) or 0
 		extended.healthmaxRaw = UnitHealthMax(unitid) or 1
-		if issecretvalue and (issecretvalue(extended.healthRaw) or issecretvalue(extended.healthmaxRaw)) then
-			unit.health, unit.healthmax = 1, 1
+		extended.healthPercentRaw = nil
+		unit.healthSecret = false
+		if IsSecret(extended.healthRaw) or IsSecret(extended.healthmaxRaw) then
+			local pct = GetHealthPercent(unitid)
+			if pct ~= nil and not IsSecret(pct) then
+				unit.health, unit.healthmax = pct, 100
+			else
+				-- Still secret: only widget APIs may use it (health text, ApplyHealthStep)
+				extended.healthPercentRaw = pct
+				unit.health, unit.healthmax = 1, 1
+				unit.healthSecret = true
+			end
 		else
 			unit.health, unit.healthmax = extended.healthRaw, extended.healthmaxRaw
 		end
@@ -774,6 +839,7 @@ do
 
 		if extended.requestedAlpha > 0 then
 			extended:SetAlpha(extended.requestedAlpha)
+			ApplyHealthStep(extended, unit.unitid, "alpha", extended.requestedAlpha)
 			if nameplate:IsShown() then extended:Show() end
 		else
 			extended:Hide()        -- FRAME HIDE TEST
@@ -800,6 +866,7 @@ do
 			if activetheme.SetScale then
 				scale = activetheme.SetScale(unit)
 				if scale then extended:SetScale( scale )end
+				ApplyHealthStep(extended, unit.unitid, "scale", scale or 1)
 			end
 
 			-- Set Special-Case Regions

@@ -21,7 +21,9 @@ local function DummyFunction() end
 
 -- By Low Health
 local function AlphaFunctionByLowHealth(unit)
-	if unit.health/unit.healthmax < LocalVars.LowHealthThreshold then return LocalVars.OpacitySpotlight end
+	if unit.healthSecret then
+		TidyPlates.RequestHealthStep(unit, "alpha", LocalVars.LowHealthThreshold, LocalVars.OpacitySpotlight)
+	elseif unit.health/unit.healthmax < LocalVars.LowHealthThreshold then return LocalVars.OpacitySpotlight end
 end
 
 -- By Threat (High)
