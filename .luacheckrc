@@ -6,7 +6,7 @@ exclude_files = { "TidyPlates/BackupCore.lua", "TidyPlatesWidgets/_RangeWidget.l
 
 -- Globals the addons define and share.
 globals = {
-	"TidyPlates", "TidyPlatesDebug", "TidyPlatesForever", "InterfaceOptions_AddCategory", "GetAddOnMetadata", "GetSpellInfo", "GetSpecialization", "GetSpecializationInfo", "GetSpecializationRole", "GetActiveSpecGroup", "C_SpecializationInfo", "UnitAura", "UnitBuff", "TidyPlatesEnableBackdrop", "TidyPlatesOptions",
+	"TidyPlates", "TidyPlatesDebug", "TidyPlatesForever", "InterfaceOptions_AddCategory", "InterfaceOptionsFrame_OpenToCategory", "GetAddOnMetadata", "GetSpellInfo", "GetSpecialization", "GetSpecializationInfo", "GetSpecializationRole", "GetActiveSpecGroup", "C_SpecializationInfo", "UnitAura", "UnitBuff", "TidyPlatesEnableBackdrop", "TidyPlatesOptions",
 	"TidyPlatesUtility", "TidyPlatesThemeList", "TidyPlatesHubMenus",
 	"TidyPlatesHubSettings", "TidyPlatesHubGlobal", "TidyPlatesHubCache",
 	"TidyPlatesSlashCommands", "SlashCmdList",
@@ -24,7 +24,7 @@ globals = {
 -- WoW API surface is huge; treat unknown globals as read-only fields rather than errors.
 read_globals = {
 	"WOW_PROJECT_ID", "WOW_PROJECT_CAMELOT", "C_NamePlate", "C_UnitAuras", "C_Timer",
-	"CreateFrame", "UnitCastingDuration", "UnitChannelDuration", "Enum", "geterrorhandler", "debugstack", "CreateColor", "issecretvalue", "Mixin", "BackdropTemplateMixin", "Settings", "WorldFrame", "UIParent", "GameTooltip",
+	"CreateFrame", "ShowUIPanel", "SettingsPanel", "UnitCastingDuration", "UnitChannelDuration", "Enum", "geterrorhandler", "debugstack", "CreateColor", "issecretvalue", "Mixin", "BackdropTemplateMixin", "Settings", "WorldFrame", "UIParent", "GameTooltip",
 	"UnitName", "UnitGUID", "UnitExists", "UnitIsUnit", "UnitClass", "UnitReaction",
 	"UnitHealth", "UnitHealthMax", "UnitAffectingCombat", "UnitCanAttack", "UnitIsPlayer",
 	"UnitThreatSituation", "UnitDetailedThreatSituation", "UnitCastingInfo", "UnitChannelInfo",
@@ -35,7 +35,7 @@ read_globals = {
 	"ceil", "floor", "max", "min", "sort", "gsub", "strfind", "bit", "getglobal",
 	"IsSpellKnown", "UNSPECIFIED_TOTEM", "ColorPickerFrame", "OpacitySliderFrame", "UnitInRaid", "UnitInParty",
 	"PlaySound", "UnitClassBase",
-	"UnitPowerMax", "UnitPower", "UnitPowerType", "UnitGroupRolesAssigned", "InterfaceOptionsFrame_OpenToCategory",
+	"UnitPowerMax", "UnitPower", "UnitPowerType", "UnitGroupRolesAssigned",
 	"InterfaceOptionsFrame", "InterfaceOptionsListButton_ToggleSubCategories", "INTERFACEOPTIONS_ADDONCATEGORIES",
 	"HasPetUI", "ReloadUI", "PowerBarColor", "SPELL_POWER_CHI", "SPEC_MONK_BREWMASTER",
 	"IsShiftKeyDown", "GetShapeshiftFormID", "GetPartyAssignment", "GetGuildInfo", "UnitSelectionColor",

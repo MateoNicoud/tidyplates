@@ -810,7 +810,8 @@ do
 	local fixed = false
 
 	local function OpenInterfacePanel(panel)
-		if not fixed then
+		-- The old options window needs its category list expanded first; the Settings window does not
+		if not fixed and INTERFACEOPTIONS_ADDONCATEGORIES then
 
 			local panelName = panel.name
 			if not panelName then return end

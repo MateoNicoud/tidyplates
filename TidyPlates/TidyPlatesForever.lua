@@ -30,6 +30,18 @@ if not InterfaceOptions_AddCategory and Settings and Settings.RegisterCanvasLayo
 			categories[name] = category
 		end
 	end
+
+	-- Opens a panel registered above; accepts the panel or its name. Unknown panels (e.g. Blizzard's own)
+	-- just open the settings window.
+	function InterfaceOptionsFrame_OpenToCategory(panelOrName)
+		local name = type(panelOrName) == "table" and panelOrName.name or panelOrName
+		local category = name and categories[name]
+		if category and Settings.OpenToCategory then
+			Settings.OpenToCategory(category:GetID())
+		elseif SettingsPanel then
+			ShowUIPanel(SettingsPanel)
+		end
+	end
 end
 
 -- Specialization/talent APIs live in C_SpecializationInfo on this client; the old globals are gone.
