@@ -34,6 +34,7 @@ local ContainerAvailable = C_XMLUtil and C_XMLUtil.GetTemplateInfo
 	and AuraContainerSortMethod and AuraContainerSortDirection and AnchorUtil and AnchorUtil.FlowDirection and true or false
 
 local AllWidgets = {}
+local PlayerInCombat = false
 
 local function GetFilterString(unitid)
 	if UnitIsFriend("player", unitid) then
@@ -113,6 +114,12 @@ local function ConfigureContainer(widget)
 	for _, button in ipairs(widget.buttons) do pcall(SkinButton, button) end
 end
 
+-- Dispellable/stealable enemy buffs are only shown while the player is in combat
+local function SetBuffGroup(container, unitid)
+	local show = PlayerInCombat and FilterOptions.enemyDispellableBuffs and not UnitIsFriend("player", unitid)
+	container:SetAuraGroupEnabled(BUFF_GROUP, show and true or false)
+end
+
 local function UpdateWidgetContext(widget, unit)
 	local container = widget.container
 	local unitid = unit and unit.unitid
@@ -126,7 +133,7 @@ local function UpdateWidgetContext(widget, unit)
 
 	local filter = GetFilterString(unitid)
 	container:SetAuraGroupFilterString(GROUP, filter)
-	container:SetAuraGroupEnabled(BUFF_GROUP, FilterOptions.enemyDispellableBuffs and not UnitIsFriend("player", unitid))
+	SetBuffGroup(container, unitid)
 	if widget.auraUnit == unitid and widget.auraFilter == filter then
 		container:UpdateAllAuras()
 	else
@@ -187,6 +194,16 @@ local function CreateAuraWidget(parent)
 	AllWidgets[#AllWidgets + 1] = widget
 	return widget
 end
+
+local CombatWatcher = CreateFrame("Frame")
+CombatWatcher:RegisterEvent("PLAYER_REGEN_DISABLED")
+CombatWatcher:RegisterEvent("PLAYER_REGEN_ENABLED")
+CombatWatcher:SetScript("OnEvent", function(_, event)
+	PlayerInCombat = (event == "PLAYER_REGEN_DISABLED")
+	for _, widget in ipairs(AllWidgets) do
+		if widget.container and widget.auraUnit then SetBuffGroup(widget.container, widget.auraUnit) end
+	end
+end)
 
 local function ReconfigureAll()
 	for _, widget in ipairs(AllWidgets) do UpdateWidgetConfig(widget) end
