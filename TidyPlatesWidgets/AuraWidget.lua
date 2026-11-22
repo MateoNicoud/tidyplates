@@ -23,7 +23,7 @@ local ICON_SPACING = 5
 
 -- Filter strings the container applies on the client side (no per-aura Lua decisions are possible).
 -- Hostile units: only the player's own debuffs. Friendly units: every debuff, or only the ones the player can dispel.
-local FilterOptions = { friendlyDispellable = false, enemyDispellableBuffs = false }
+local FilterOptions = { friendlyDispellable = false, enemyDispellableBuffs = false, enemyBuffsCombatOnly = true }
 local FILTER_ENEMY_BUFFS = "HELPFUL|RAID_PLAYER_DISPELLABLE"  -- buffs on enemies the player can dispel or steal
 local FILTER_HOSTILE = "HARMFUL|PLAYER"
 local FILTER_FRIENDLY = "HARMFUL"
@@ -114,9 +114,9 @@ local function ConfigureContainer(widget)
 	for _, button in ipairs(widget.buttons) do pcall(SkinButton, button) end
 end
 
--- Dispellable/stealable enemy buffs are only shown while the player is in combat
+-- Dispellable/stealable enemy buffs: always, or only while the player is in combat (option)
 local function SetBuffGroup(container, unitid)
-	local show = PlayerInCombat and FilterOptions.enemyDispellableBuffs and not UnitIsFriend("player", unitid)
+	local show = (PlayerInCombat or not FilterOptions.enemyBuffsCombatOnly) and FilterOptions.enemyDispellableBuffs and not UnitIsFriend("player", unitid)
 	container:SetAuraGroupEnabled(BUFF_GROUP, show and true or false)
 end
 
@@ -218,11 +218,12 @@ end
 local function UseSquareDebuffIcon() UseDebuffStyle("square") end
 local function UseWideDebuffIcon() UseDebuffStyle("wide") end
 
--- Hub options that still make sense on secret auras: {friendlyDispellable = bool, enemyDispellableBuffs = bool}
+-- Hub options that still make sense on secret auras: {friendlyDispellable = bool, enemyDispellableBuffs = bool, enemyBuffsCombatOnly = bool}
 local function SetAuraFilterOptions(options)
 	if type(options) == "table" then
 		FilterOptions.friendlyDispellable = options.friendlyDispellable and true or false
 		FilterOptions.enemyDispellableBuffs = options.enemyDispellableBuffs and true or false
+		FilterOptions.enemyBuffsCombatOnly = options.enemyBuffsCombatOnly ~= false
 		TidyPlates:ForceUpdate()
 	end
 end

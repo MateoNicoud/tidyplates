@@ -163,7 +163,8 @@ local function BuildHubPanel(panel)
 	panel.WidgetsDebuffStyle =  CreateQuickDropdown(objectName.."WidgetsDebuffStyle", "Icon Style:", DebuffStyles, 1, AlignmentColumn, panel.WidgetsDebuff, 16)
 
 	panel.WidgetAuraTrackStealable = CreateQuickCheckbutton(objectName.."WidgetAuraTrackStealable", "Include Stealable & Purgable Enemy Buffs", AlignmentColumn, panel.WidgetsDebuffStyle, 16, 4)
-	panel.WidgetAuraTrackDispelFriendly = CreateQuickCheckbutton(objectName.."WidgetAuraTrackDispelFriendly", "Include Dispellable Debuffs on Friendly Units", AlignmentColumn, panel.WidgetAuraTrackStealable, 16, 4)
+	panel.WidgetAuraTrackStealableCombatOnly = CreateQuickCheckbutton(objectName.."WidgetAuraTrackStealableCombatOnly", "Only in Combat", AlignmentColumn, panel.WidgetAuraTrackStealable, 16+16, -2)
+	panel.WidgetAuraTrackDispelFriendly = CreateQuickCheckbutton(objectName.."WidgetAuraTrackDispelFriendly", "Include Dispellable Debuffs on Friendly Units", AlignmentColumn, panel.WidgetAuraTrackStealableCombatOnly, 16, 4)
 
 	-- Expand Options
 	-- Filtering mode: Show raid targets, show only my target

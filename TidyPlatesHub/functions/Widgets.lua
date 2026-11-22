@@ -123,7 +123,7 @@ local function OnVariableChange(vars)
 
 	LocalVars = vars
 
-	TidyPlatesWidgets.SetAuraFilterOptions({ friendlyDispellable = LocalVars.WidgetAuraTrackDispelFriendly, enemyDispellableBuffs = LocalVars.WidgetAuraTrackStealable })
+	TidyPlatesWidgets.SetAuraFilterOptions({ friendlyDispellable = LocalVars.WidgetAuraTrackDispelFriendly, enemyDispellableBuffs = LocalVars.WidgetAuraTrackStealable, enemyBuffsCombatOnly = LocalVars.WidgetAuraTrackStealableCombatOnly })
 end
 HubData.RegisterCallback(OnVariableChange)
 
