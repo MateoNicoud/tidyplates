@@ -6,7 +6,7 @@ exclude_files = { "TidyPlates/BackupCore.lua", "TidyPlatesWidgets/_RangeWidget.l
 
 -- Globals the addons define and share.
 globals = {
-	"TidyPlates", "TidyPlatesDebug", "TidyPlatesForever", "InterfaceOptions_AddCategory", "GetAddOnMetadata", "GetSpellInfo", "GetSpecialization", "GetSpecializationInfo", "GetSpecializationRole", "TidyPlatesEnableBackdrop", "TidyPlatesOptions",
+	"TidyPlates", "TidyPlatesDebug", "TidyPlatesForever", "InterfaceOptions_AddCategory", "GetAddOnMetadata", "GetSpellInfo", "GetSpecialization", "GetSpecializationInfo", "GetSpecializationRole", "UnitAura", "UnitBuff", "TidyPlatesEnableBackdrop", "TidyPlatesOptions",
 	"TidyPlatesUtility", "TidyPlatesThemeList", "TidyPlatesHubMenus",
 	"TidyPlatesHubSettings", "TidyPlatesHubGlobal", "TidyPlatesHubCache",
 	"TidyPlatesSlashCommands", "SlashCmdList",
@@ -37,7 +37,7 @@ read_globals = {
 	"PlaySound", "UnitClassBase",
 	"UnitPowerMax", "UnitPower", "UnitPowerType", "UnitGroupRolesAssigned", "InterfaceOptionsFrame_OpenToCategory",
 	"InterfaceOptionsFrame", "InterfaceOptionsListButton_ToggleSubCategories", "INTERFACEOPTIONS_ADDONCATEGORIES",
-	"HasPetUI", "ReloadUI", "UnitAura", "UnitBuff", "PowerBarColor", "SPELL_POWER_CHI", "SPEC_MONK_BREWMASTER",
+	"HasPetUI", "ReloadUI", "PowerBarColor", "SPELL_POWER_CHI", "SPEC_MONK_BREWMASTER",
 	"IsShiftKeyDown", "GetShapeshiftFormID", "GetPartyAssignment", "GetGuildInfo", "UnitSelectionColor",
 	"UnitPlayerOrPetInParty", "UnitPlayerControlled", "UnitPVPName", "UnitLevel", "UnitIsTapDenied", "UnitIsFriend",
 	"UnitFactionGroup", "UnitEffectiveLevel", "UnitClassification", "UNIT_LEVEL_TEMPLATE", "UIDropDownMenu_AddButton",

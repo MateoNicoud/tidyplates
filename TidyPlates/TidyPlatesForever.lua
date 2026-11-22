@@ -37,6 +37,21 @@ if not GetSpecialization then function GetSpecialization() return nil end end
 if not GetSpecializationInfo then function GetSpecializationInfo() return nil end end
 if not GetSpecializationRole then function GetSpecializationRole() return nil end end
 
+-- Aura reads: rebuild the old UnitAura tuple from C_UnitAuras. Returns nothing if the API is missing,
+-- which ends the callers' aura loops cleanly.
+if not UnitAura then
+	function UnitAura(unit, index, filter)
+		local getAura = C_UnitAuras and C_UnitAuras.GetAuraDataByIndex
+		local a = getAura and getAura(unit, index, filter)
+		if not a then return nil end
+		return a.name, a.icon, a.applications, a.dispelName, a.duration, a.expirationTime, a.sourceUnit,
+			a.isStealable, a.nameplateShowPersonal, a.spellId, a.canApplyAura, a.isBossAura
+	end
+end
+if not UnitBuff then
+	function UnitBuff(unit, index) return UnitAura(unit, index, "HELPFUL") end
+end
+
 -- /tidydebug toggles TidyPlatesDebug, which gates the core's debug prints.
 -- Output goes to the chat window so it can be copied.
 SLASH_TIDYDEBUG1 = '/tidydebug'
