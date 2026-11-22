@@ -305,7 +305,7 @@ local function OnVariableChange(vars)
 
 	if LocalVars.WidgetsDebuff then
 		TidyPlatesWidgets:EnableAuraWatcher()
-		TidyPlatesWidgets.SetAuraFilter(DebuffFilter)
+		TidyPlatesWidgets.SetAuraFilterOptions({ friendlyDispellable = LocalVars.WidgetAuraTrackDispelFriendly })
 	else TidyPlatesWidgets:DisableAuraWatcher() end
 end
 HubData.RegisterCallback(OnVariableChange)

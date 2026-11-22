@@ -61,7 +61,7 @@ local TankAuras = {
 }
 
 local function UpdatePlayerRole()
-	local spellID, name, _
+
 	local playerTankAura = false
 
 	-- Look at the Player's Specialization
@@ -74,12 +74,14 @@ local function UpdatePlayerRole()
 		playerTankRole = false
 	end
 
-	-- Check Auras (UnitBuff may be absent; issue #5 moves aura reads to C_UnitAuras)
-	if UnitBuff then
-		for i = 1, 40 do
-			name, _, _, _, _, _, _, _, _, _, spellID = UnitBuff("player", i)	-- 11th
-			if TankAuras[tostring(spellID)] then
+	-- Check Auras: look each tank aura up by spell ID (the player's own auras; a refused read counts as "no aura")
+	local getPlayerAura = C_UnitAuras and C_UnitAuras.GetPlayerAuraBySpellID
+	if getPlayerAura then
+		for tankSpellID in pairs(TankAuras) do
+			local ok, aura = pcall(getPlayerAura, tonumber(tankSpellID))
+			if ok and aura then
 				playerTankAura = true
+				break
 			end
 		end
 	end

@@ -9,7 +9,7 @@ exclude_files = { "TidyPlates/BackupCore.lua", "TidyPlatesWidgets/_RangeWidget.l
 
 -- Globals the addons define and share.
 globals = {
-	"TidyPlates", "TidyPlatesDebug", "TidyPlatesForever", "TidyPlatesErrorLog", "seterrorhandler", "InterfaceOptions_AddCategory", "InterfaceOptionsFrame_OpenToCategory", "GetAddOnMetadata", "GetSpellInfo", "GetSpecialization", "GetSpecializationInfo", "GetSpecializationRole", "GetActiveSpecGroup", "C_SpecializationInfo", "UnitAura", "UnitBuff", "TidyPlatesEnableBackdrop", "TidyPlatesOptions",
+	"TidyPlates", "TidyPlatesDebug", "TidyPlatesForever", "TidyPlatesErrorLog", "seterrorhandler", "InterfaceOptions_AddCategory", "InterfaceOptionsFrame_OpenToCategory", "GetAddOnMetadata", "GetSpellInfo", "GetSpecialization", "GetSpecializationInfo", "GetSpecializationRole", "GetActiveSpecGroup", "C_SpecializationInfo", "TidyPlatesEnableBackdrop", "TidyPlatesOptions",
 	"TidyPlatesUtility", "TidyPlatesThemeList", "TidyPlatesHubMenus",
 	"TidyPlatesHubSettings", "TidyPlatesHubGlobal", "TidyPlatesHubCache",
 	"TidyPlatesSlashCommands", "SlashCmdList",
@@ -26,7 +26,7 @@ globals = {
 
 -- WoW API surface is huge; treat unknown globals as read-only fields rather than errors.
 read_globals = {
-	"WOW_PROJECT_ID", "WOW_PROJECT_CAMELOT", "C_NamePlate", "C_UnitAuras", "C_Timer",
+	"WOW_PROJECT_ID", "WOW_PROJECT_CAMELOT", "C_NamePlate", "C_UnitAuras", "C_XMLUtil", "AuraContainerSortMethod", "AuraContainerSortDirection", "AnchorUtil", "C_Timer",
 	"CreateFrame", "C_Spell", "C_AddOns", "ShowUIPanel", "SettingsPanel", "UnitCastingDuration", "UnitChannelDuration", "Enum", "geterrorhandler", "debugstack", "CreateColor", "issecretvalue", "Mixin", "BackdropTemplateMixin", "Settings", "WorldFrame", "UIParent", "GameTooltip",
 	"UnitName", "UnitGUID", "UnitExists", "UnitIsUnit", "UnitClass", "UnitReaction",
 	"UnitHealth", "UnitHealthMax", "UnitAffectingCombat", "UnitCanAttack", "UnitIsPlayer",

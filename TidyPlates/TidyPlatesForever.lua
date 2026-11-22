@@ -60,22 +60,6 @@ if not GetSpecializationInfo then GetSpecializationInfo = SpecInfo.GetSpecializa
 if not GetSpecializationRole then GetSpecializationRole = SpecInfo.GetSpecializationRole or function() return nil end end
 if not GetActiveSpecGroup then GetActiveSpecGroup = SpecInfo.GetActiveSpecGroup or function() return 1 end end
 
--- Aura reads: rebuild the old UnitAura tuple from C_UnitAuras. Returns nothing if the API is missing,
--- which ends the callers' aura loops cleanly.
-if not UnitAura then
-	function UnitAura(unit, index, filter)
-		local getAura = C_UnitAuras and C_UnitAuras.GetAuraDataByIndex
-		-- Aura data can be refused (secret) for tainted callers: treat that as "no aura"
-		local ok, a = pcall(getAura or function() end, unit, index, filter)
-		if not ok or not a then return nil end
-		return a.name, a.icon, a.applications, a.dispelName, a.duration, a.expirationTime, a.sourceUnit,
-			a.isStealable, a.nameplateShowPersonal, a.spellId, a.canApplyAura, a.isBossAura
-	end
-end
-if not UnitBuff then
-	function UnitBuff(unit, index) return UnitAura(unit, index, "HELPFUL") end
-end
-
 -- Blocked-action reporter: the client's "action blocked" popup does not name the function.
 -- While /tidydebug is on, it reports the function and a short stack through the error handler whenever the
 -- client blames a Tidy Plates addon (so it lands in the error window or BugSack).

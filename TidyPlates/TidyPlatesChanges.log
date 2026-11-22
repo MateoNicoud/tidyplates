@@ -7,6 +7,12 @@ See TidyPlatesChanges.log for cumulative changes:
 
 
 ---------------------------
+Unreleased
+---------------------------
+* Aura Widget: auras are drawn by a client aura container (secret-safe, works in combat). Shows your own debuffs on enemies; friendly units show all debuffs (or only dispellable ones). Hub filters by name, type, caster and stealable no longer apply.
+* Tank Track: reads the player's tank auras with C_UnitAuras.
+
+---------------------------
 6.19.2-Beta4
 ---------------------------
 * Core: bugs

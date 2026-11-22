@@ -20,7 +20,7 @@ with or branch on them. Pass them only to widget APIs (`StatusBar:SetValue`, `Se
   numbers (1 and 1 when secret), because the core compares `unit` against its cache and the Hub compares health.
 - Cast timing comes from `UnitCastingDuration` / `UnitChannelDuration` driving the bar with `SetTimerDuration`.
 - Addon code and slash commands cannot read secret auras (`GetAuraDataByIndex`, `GetUnitAuras` are refused). The client has
-  `CustomAuraContainerTemplate` (an `AuraContainer` it fills and draws); that is the route for auras (issue #5).
+  `CustomAuraContainerTemplate` (an `AuraContainer` it fills and draws); the Aura Widget builds one per Plate and only configures it (filter string, max count, sort, growth, button look), so Hub aura filters by name, type or caster no longer apply. Tank Track reads the player's own auras with `C_UnitAuras.GetPlayerAuraBySpellID`.
 
 ## Forbidden and protected things
 
@@ -32,7 +32,7 @@ with or branch on them. Pass them only to widget APIs (`StatusBar:SetValue`, `Se
 
 ## Missing or changed APIs
 
-Specialization globals, `InterfaceOptions_*`, `UnitAura`, `GetSpellInfo`, `GetAddOnMetadata` are gone or moved (polyfilled).
+Specialization globals, `InterfaceOptions_*`, `UnitAura`/`UnitBuff` (no shim: use `C_UnitAuras`), `GetSpellInfo`, `GetAddOnMetadata` are gone or moved (polyfilled).
 Frames need `BackdropTemplate` for `SetBackdrop`. `SetFont` flags reject `"NONE"`; `SetJustifyV` takes `MIDDLE`, not `CENTER`.
 There are no class specializations: a Talent group (two of them) and the Group role replace them (`GLOSSARY.md`).
 
