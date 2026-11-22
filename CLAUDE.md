@@ -4,12 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Tidy Plates (v6.19.2) is a World of Warcraft nameplate replacement addon (Interface 80000), written in Lua + Blizzard XML. The repo root holds several sibling addon folders; each is installed separately into `Interface/AddOns/`. There is no build system, linter, or test suite — code runs only inside the WoW client.
+Tidy Plates (v6.19.2) is a World of Warcraft nameplate replacement addon (Interface 16001, WoW Forever), written in Lua + Blizzard XML. The repo root holds several sibling addon folders; each is installed separately into `Interface/AddOns/`. There is no build system, linter, or test suite — code runs only inside the WoW client.
 
 ## Commands
 
 - Package a release (from the repo root, per `TidyPlates/TidyPlatesChanges.log`): `zip -vr TP_Release.zip TidyPlates* -x@exclude.lst` (`exclude.lst` is not in the repo; it excludes `.svn`, `.DS_Store`, images, `.txt`, `.zip`, etc.)
-- Dev install: copy/symlink every `TidyPlates*` folder into the WoW `Interface/AddOns/` directory, then `/reload` in game.
+- Dev install: `scripts/deploy-forever.sh` (client path from `FOREVER_DIR` or the git-ignored `.forever-path`) copies every `TidyPlates*` folder into the Forever client, then `/reload` in game.
+- Check: `scripts/check.sh` (changed files: luacheck, line endings, calls the client rejects). Enable the hook once with `git config core.hooksPath .githooks`; see `docs/agents/linting.md`.
 - In-game: `/hub` opens the Hub config panel. Set the global `TidyPlatesDebug` to enable debug prints in the core.
 - Record user-facing changes at the top of `TidyPlates/TidyPlatesChanges.log` and bump `## Version` in `TidyPlates.toc` for releases.
 
@@ -28,6 +29,8 @@ When adding a Lua file, add it to the matching `.toc` or `.xml` manifest, or it 
 ## Project goal and language
 
 This is a fork of Binbwen/tidyplates (`upstream`), being adapted to run on **WoW Forever**. Our fork is `origin` (`MateoNicoud/tidyplates`); open PRs and issues there, never against upstream.
+
+Before touching units, auras, casts, frames or options, read `docs/forever-client.md` (what the client breaks and the shim in `TidyPlates/TidyPlatesForever.lua`). Review rules: `CODING_STANDARDS.md`.
 
 ### Reference addons for the WoW Forever port
 
