@@ -52,6 +52,18 @@ if not UnitBuff then
 	function UnitBuff(unit, index) return UnitAura(unit, index, "HELPFUL") end
 end
 
+-- Blocked-action reporter: the client's "action blocked" popup does not name the function.
+-- This prints it, with a short stack, whenever the client blames a Tidy Plates addon.
+local blockedFrame = CreateFrame("Frame")
+blockedFrame:RegisterEvent("ADDON_ACTION_FORBIDDEN")
+blockedFrame:RegisterEvent("ADDON_ACTION_BLOCKED")
+blockedFrame:SetScript("OnEvent", function(_, event, addon, func)
+	if addon and tostring(addon):find("TidyPlates", 1, true) then
+		print("|cffff5555Tidy Plates "..event.."|r "..tostring(addon).." -> "..tostring(func))
+		print(debugstack and debugstack(3, 6, 0) or "")
+	end
+end)
+
 -- /tidydebug toggles TidyPlatesDebug, which gates the core's debug prints.
 -- Output goes to the chat window so it can be copied.
 SLASH_TIDYDEBUG1 = '/tidydebug'

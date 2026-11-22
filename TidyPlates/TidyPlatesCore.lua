@@ -119,6 +119,8 @@ do
 	function HideBlizzardFrame(plate)
 		local blizzFrame = plate.UnitFrame or plate:GetChildren()
 		if not blizzFrame or blizzFrame == plate.carrier then return end
+		-- Forbidden frames (e.g. some plates in instances) must not be touched by addon code
+		if blizzFrame.IsForbidden and blizzFrame:IsForbidden() then return end
 		blizzFrame:SetAlpha(0)
 		if not blizzFrame.tidyHooked then
 			blizzFrame.tidyHooked = true
@@ -414,7 +416,9 @@ do
 
 		-- Give the Blizzard frame back (the plate may be reused for a unit we do not theme)
 		local blizzFrame = plate.UnitFrame or plate:GetChildren()
-		if blizzFrame and blizzFrame ~= plate.carrier then plate.extended.Active = false; blizzFrame:SetAlpha(1) end
+		if blizzFrame and blizzFrame ~= plate.carrier and not (blizzFrame.IsForbidden and blizzFrame:IsForbidden()) then
+			plate.extended.Active = false; blizzFrame:SetAlpha(1)
+		end
 
 		UpdateReferences(plate)
 
@@ -967,6 +971,7 @@ do
 
 	function CoreEvents:NAME_PLATE_CREATED(...)
 		local plate = ...
+		if plate.IsForbidden and plate:IsForbidden() then return end
 
 		-- hooksecurefunc([table,] "function", hookfunc)
 
@@ -981,7 +986,7 @@ do
 		local plate = GetNamePlateForUnit(unitid);
 
 		-- We're not going to theme the personal unit bar
-		if plate and not UnitIsUnit("player", unitid) then
+		if plate and not (plate.IsForbidden and plate:IsForbidden()) and not UnitIsUnit("player", unitid) then
 			HideBlizzardFrame(plate)
 			-- Create the extension lazily if NAME_PLATE_CREATED did not reach us
 			if not plate.carrier then OnNewNameplate(plate) end
