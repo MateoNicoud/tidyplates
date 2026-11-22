@@ -25,6 +25,10 @@ When set to `yes`, PRs run through the same labels and states as issues, using t
 
 GitHub shares one number space across issues and PRs, so a bare `#42` may be either: resolve with `gh pr view 42` and fall back to `gh issue view 42`.
 
+## Replacement tickets
+
+A ticket that replaces a subsystem lists, besides its acceptance criteria, which behaviours of the old code are **kept** and which are **dropped** (options in the Hub panel included). Reviewers check the diff against that list; the #5 review missed the enemy stealable buffs because the ticket only named debuffs.
+
 ## When a skill says "publish to the issue tracker"
 
 Create a GitHub issue.

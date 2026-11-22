@@ -25,6 +25,8 @@ with or branch on them. Pass them only to widget APIs (`StatusBar:SetValue`, `Se
 ## Forbidden and protected things
 
 - `COMBAT_LOG_EVENT_UNFILTERED` cannot be registered: it raises a blocked-action popup, and a `pcall` does not prevent it.
+- Aura container buttons are protected objects once the client has created them: size and anchor them only inside `initializeFrame`; later size changes go through the container layout (`SetAuraGroupLayout`). Calling `SetSize` on one from addon code raises "forbidden object from code tainted by an AddOn".
+- A `FontString` the client will write text into (for example the one given to `SetApplicationCount`) needs a font before it is bound: create it with a font template, or call `SetFont` first. Otherwise `SetText(): Font not set` fires while the container builds its buttons.
 - The Blizzard nameplate `UnitFrame` can be protected or forbidden: hide it with alpha, after `IsForbidden()`; never `Hide()` it.
 - `nameplateMaxDistance` (accepts up to 60) and other nameplate CVars are combat-protected: write them out of combat only.
 - Unit events fire for every unit token; `C_NamePlate.GetNamePlateForUnit` raises on anything but `nameplateN` (the core filters).
@@ -35,6 +37,10 @@ with or branch on them. Pass them only to widget APIs (`StatusBar:SetValue`, `Se
 Specialization globals, `InterfaceOptions_*`, `UnitAura`/`UnitBuff` (no shim: use `C_UnitAuras`), `GetSpellInfo`, `GetAddOnMetadata` are gone or moved (polyfilled).
 Frames need `BackdropTemplate` for `SetBackdrop`. `SetFont` flags reject `"NONE"`; `SetJustifyV` takes `MIDDLE`, not `CENTER`.
 There are no class specializations: a Talent group (two of them) and the Group role replace them (`GLOSSARY.md`).
+
+## Where the aura container API comes from
+
+The method names (`AddAuraGroup`, `SetAuraGroupFilterString`, `SetAuraGroupEnabled`, `SetUnit`, ...) were taken from Plater's `Plater_Auras.lua`: the client's own UI source is not on disk here. Treat a name as verified only once the code that calls it ran in game without an error.
 
 ## Testing
 

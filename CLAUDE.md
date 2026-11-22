@@ -11,6 +11,7 @@ Tidy Plates (v6.19.2) is a World of Warcraft nameplate replacement addon (Interf
 - Package a release (from the repo root, per `TidyPlates/TidyPlatesChanges.log`): `zip -vr TP_Release.zip TidyPlates* -x@exclude.lst` (`exclude.lst` is not in the repo; it excludes `.svn`, `.DS_Store`, images, `.txt`, `.zip`, etc.)
 - Dev install: `scripts/deploy-forever.sh` (client path from `FOREVER_DIR` or the git-ignored `.forever-path`) copies every `TidyPlates*` folder into the Forever client, then `/reload` in game.
 - Check: `scripts/check.sh` (changed files: luacheck, line endings, calls the client rejects). Enable the hook once with `git config core.hooksPath .githooks`; see `docs/agents/linting.md`.
+- After deploying, arm `scripts/watch-errors.sh` (Monitor) before asking for a `/reload`: Lua errors reach you as one line each. Search the client only inside `Interface/AddOns/<addon>`, never the whole `_forever_` folder.
 - In-game: `/hub` opens the Hub config panel. Set the global `TidyPlatesDebug` to enable debug prints in the core.
 - Record user-facing changes at the top of `TidyPlates/TidyPlatesChanges.log` and bump `## Version` in `TidyPlates.toc` for releases.
 
