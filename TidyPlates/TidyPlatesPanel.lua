@@ -183,7 +183,7 @@ end
 
 
 local function SetPanelValues(panel)
-	panel.ActiveThemeDropdown:SetValue(TidyPlatesOptions.ActiveTheme)
+	panel.ActiveThemeDropdown:SetValue(TidyPlatesOptions.ActiveTheme or FirstTryTheme)	-- same fallback the core uses
 
 	panel.FirstSpecDropdown:SetValue(TidyPlatesOptions.FirstSpecProfile)
 	panel.SecondSpecDropdown:SetValue(TidyPlatesOptions.SecondSpecProfile)
