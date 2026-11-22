@@ -6,7 +6,7 @@ exclude_files = { "TidyPlates/BackupCore.lua", "TidyPlatesWidgets/_RangeWidget.l
 
 -- Globals the addons define and share.
 globals = {
-	"TidyPlates", "TidyPlatesDebug", "TidyPlatesForever", "GetAddOnMetadata", "GetSpellInfo", "TidyPlatesEnableBackdrop", "TidyPlatesOptions",
+	"TidyPlates", "TidyPlatesDebug", "TidyPlatesForever", "InterfaceOptions_AddCategory", "GetAddOnMetadata", "GetSpellInfo", "TidyPlatesEnableBackdrop", "TidyPlatesOptions",
 	"TidyPlatesUtility", "TidyPlatesThemeList", "TidyPlatesHubMenus",
 	"TidyPlatesHubSettings", "TidyPlatesHubGlobal", "TidyPlatesHubCache",
 	"TidyPlatesSlashCommands", "SlashCmdList",
@@ -24,7 +24,7 @@ globals = {
 -- WoW API surface is huge; treat unknown globals as read-only fields rather than errors.
 read_globals = {
 	"WOW_PROJECT_ID", "WOW_PROJECT_CAMELOT", "C_NamePlate", "C_UnitAuras", "C_Timer",
-	"CreateFrame", "Mixin", "BackdropTemplateMixin", "WorldFrame", "UIParent", "GameTooltip", "InterfaceOptions_AddCategory",
+	"CreateFrame", "Mixin", "BackdropTemplateMixin", "Settings", "WorldFrame", "UIParent", "GameTooltip", "InterfaceOptions_AddCategory",
 	"UnitName", "UnitGUID", "UnitExists", "UnitIsUnit", "UnitClass", "UnitReaction",
 	"UnitHealth", "UnitHealthMax", "UnitAffectingCombat", "UnitCanAttack", "UnitIsPlayer",
 	"UnitThreatSituation", "UnitDetailedThreatSituation", "UnitCastingInfo", "UnitChannelInfo",

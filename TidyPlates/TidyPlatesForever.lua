@@ -15,6 +15,23 @@ if not GetSpellInfo and C_Spell and C_Spell.GetSpellInfo then
 	end
 end
 
+-- Options panels: map the old InterfaceOptions API onto the Settings API.
+-- A panel whose .parent names an already-registered panel becomes its subcategory.
+if not InterfaceOptions_AddCategory and Settings and Settings.RegisterCanvasLayoutCategory then
+	local categories = {}
+	function InterfaceOptions_AddCategory(panel)
+		local name = panel.name
+		local parent = panel.parent and categories[panel.parent]
+		if parent then
+			categories[name] = Settings.RegisterCanvasLayoutSubcategory(parent, panel, name)
+		else
+			local category = Settings.RegisterCanvasLayoutCategory(panel, name)
+			Settings.RegisterAddOnCategory(category)
+			categories[name] = category
+		end
+	end
+end
+
 -- /tidydebug toggles TidyPlatesDebug, which gates the core's debug prints.
 -- Output goes to the chat window so it can be copied.
 SLASH_TIDYDEBUG1 = '/tidydebug'
