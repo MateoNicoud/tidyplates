@@ -1,0 +1,2 @@
+# Line endings are kept exactly as committed (the addon files mix CRLF and LF); never convert them.
+* -text

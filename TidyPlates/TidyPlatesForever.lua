@@ -91,6 +91,39 @@ blockedFrame:SetScript("OnEvent", function(_, event, addon, func)
 	end
 end)
 
+-- Error log: keeps the last Tidy Plates errors in the TidyPlatesErrorLog saved variable, so they can be read from
+-- WTF/Account/<account>/SavedVariables/TidyPlates.lua after a /reload, without copying them out of the game.
+-- Saved variables only exist once ADDON_LOADED fires, so early errors wait in a local buffer.
+local errorLog, earlyErrors = nil, {}
+
+local function RecordError(message)
+	local entry = date("%H:%M:%S ")..message
+	local list = errorLog or earlyErrors
+	list[#list + 1] = entry
+	if #list > 50 then tremove(list, 1) end
+end
+
+if seterrorhandler and geterrorhandler then
+	local previousHandler = geterrorhandler()
+	seterrorhandler(function(message, ...)
+		if type(message) == "string" and message:find("TidyPlates", 1, true) then
+			RecordError(message.."\n"..(debugstack and debugstack(2, 6, 0) or ""))
+		end
+		if previousHandler then return previousHandler(message, ...) end
+	end)
+end
+
+local logLoader = CreateFrame("Frame")
+logLoader:RegisterEvent("ADDON_LOADED")
+logLoader:SetScript("OnEvent", function(self, _, addon)
+	if addon ~= "TidyPlates" then return end
+	self:UnregisterEvent("ADDON_LOADED")
+	TidyPlatesErrorLog = TidyPlatesErrorLog or {}
+	errorLog = TidyPlatesErrorLog
+	for _, entry in ipairs(earlyErrors) do errorLog[#errorLog + 1] = entry end
+	while #errorLog > 50 do tremove(errorLog, 1) end
+end)
+
 -- /tidydebug toggles TidyPlatesDebug, which gates the core's debug prints.
 -- Output goes to the chat window so it can be copied.
 SLASH_TIDYDEBUG1 = '/tidydebug'
