@@ -135,7 +135,7 @@ local function ApplyPanelSettings()
 	-- Load Hub Profile
 	ActiveProfile = DefaultProfile
 
-	local currentSpec = GetSpecialization()
+	local currentSpec = GetSpecialization and GetSpecialization()
 
 	if currentSpec == 4 then
 		ActiveProfile = TidyPlatesOptions.FourthSpecProfile
@@ -147,7 +147,7 @@ local function ApplyPanelSettings()
 		ActiveProfile = TidyPlatesOptions.FirstSpecProfile
 	end
 
-	local _, specname = GetSpecializationInfo(currentSpec)
+	local _, specname = GetSpecializationInfo and GetSpecializationInfo(currentSpec)
 
 	local theme = TidyPlates:GetTheme()
 
@@ -222,12 +222,12 @@ local function OnRefresh(panel)
 	------------------------
 	-- Spec Notes
 	------------------------
-	local currentSpec = GetSpecialization()
+	local currentSpec = GetSpecialization and GetSpecialization()
 
 	------------------------
 	-- First Spec Details
 	------------------------
-	local id, name = GetSpecializationInfo(1)
+	local id, name = GetSpecializationInfo and GetSpecializationInfo(1)
 
 	if name then
 		if currentSpec == 1 then name = name.." (Active)" end
