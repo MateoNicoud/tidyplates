@@ -21,7 +21,7 @@ globals = {
 	"TankWatcher", "AlphaFunctionsTank", "AlphaFunctionsDamage",
 	"ShowTidyPlatesHubPanel", "ShowTidyPlatesHubDamagePanel", "ShowTidyPlatesHubTankPanel",
 	"ShowTidyPlatesHubHealerPanel", "ShowTidyPlatesHubGladiatorPanel",
-	"SLASH_TIDYPLATES1", "SLASH_TIDYPLATES2", "SLASH_HUB1", "SLASH_EVAL1", "SLASH_TIDYDEBUG1", "SLASH_TIDYHEALTH1",
+	"SLASH_TIDYPLATES1", "SLASH_TIDYPLATES2", "SLASH_HUB1", "SLASH_EVAL1", "SLASH_TIDYDEBUG1", "SLASH_TIDYHEALTH1", "SLASH_TIDYPROBE1",
 }
 
 -- WoW API surface is huge; treat unknown globals as read-only fields rather than errors.

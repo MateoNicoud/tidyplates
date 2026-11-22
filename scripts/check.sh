@@ -33,6 +33,16 @@ for f in $files; do
   if [ "$crlf" -gt 0 ] && [ "$crlf" -lt "$total" ]; then fail "$f mixes CRLF and LF line endings"; fi
 done
 
+# 2b. a file must keep the line-ending style it has in the base version (an editor or script that rewrites a CRLF file as LF
+# turns a ten-line change into a whole-file diff)
+if [ "${1:-}" = "--staged" ]; then base=HEAD; else base=origin/master; fi
+for f in $files; do
+  git cat-file -e "$base:$f" 2>/dev/null || continue
+  was=$(git show "$base:$f" | grep -c $'\r$'); now=$(grep -c $'\r$' "$f")
+  if [ "$was" -gt 0 ] && [ "$now" -eq 0 ]; then fail "$f was CRLF in $base and is now LF: restore CRLF (sed -i 's/\$/\\r/')"; fi
+  if [ "$was" -eq 0 ] && [ "$now" -gt 0 ]; then fail "$f was LF in $base and is now CRLF: restore LF"; fi
+done
+
 # 3. calls the Forever client rejects (see docs/forever-client.md).
 # Comments are blanked first (line numbers kept), so commented-out code never matches.
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT

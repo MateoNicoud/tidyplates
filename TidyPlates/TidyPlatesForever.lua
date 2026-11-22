@@ -108,6 +108,22 @@ logLoader:SetScript("OnEvent", function(self, _, addon)
 	while #errorLog > 50 do tremove(errorLog, 1) end
 end)
 
+-- /tidyprobe <expression>: evaluates it and writes the result to the error log (read it after /reload), so the
+-- result reaches the repo without a screenshot. Secret values print as "<secret>".
+SLASH_TIDYPROBE1 = '/tidyprobe'
+SlashCmdList['TIDYPROBE'] = function(expression)
+	local chunk, err = loadstring("return "..expression)
+	if not chunk then RecordError("probe: "..expression.." -> syntax error: "..tostring(err)); return end
+	local results = {pcall(chunk)}
+	for i = 1, #results do
+		local value = results[i]
+		results[i] = (issecretvalue and issecretvalue(value)) and "<secret>" or tostring(value)
+	end
+	local text = "probe: "..expression.." -> "..table.concat(results, ", ")
+	RecordError(text)
+	print("|cff89f559Tidy Plates|r "..text)
+end
+
 -- /tidydebug toggles TidyPlatesDebug, which gates the core's debug prints.
 -- Output goes to the chat window so it can be copied.
 SLASH_TIDYDEBUG1 = '/tidydebug'
