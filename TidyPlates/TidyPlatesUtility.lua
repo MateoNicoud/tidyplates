@@ -449,6 +449,7 @@ DropDownMenuFrame:SetFrameStrata("TOOLTIP");
 DropDownMenuFrame:Hide()
 
 local Border = CreateFrame("Frame", nil, DropDownMenuFrame)
+TidyPlatesEnableBackdrop(Border)
 Border:SetBackdrop(
 		{	bgFile = "Interface/DialogFrame/UI-DialogBox-Background-Dark",
             edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
@@ -682,6 +683,7 @@ do
 		local colorbox = CreateFrame("Button", reference, parent)
 		colorbox:SetWidth(24)
 		colorbox:SetHeight(24)
+		TidyPlatesEnableBackdrop(colorbox)
 		colorbox:SetBackdrop({bgFile = "Interface\\ChatFrame\\ChatFrameColorSwatch",
 												edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
 												tile = false, tileSize = 16, edgeSize = 8,

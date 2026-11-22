@@ -293,6 +293,7 @@ local function CreateMenuTables()
 end
 
 local function BuildInterfacePanel(panel)
+	TidyPlatesEnableBackdrop(panel)
 	panel:SetBackdrop({bgFile = "Interface/Tooltips/UI-Tooltip-Background", insets = { left = 2, right = 2, top = 2, bottom = 2 },})
 	panel:SetBackdropColor(0.06, 0.06, 0.06, .7)
 
