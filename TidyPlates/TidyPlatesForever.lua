@@ -42,8 +42,9 @@ if not GetSpecializationRole then function GetSpecializationRole() return nil en
 if not UnitAura then
 	function UnitAura(unit, index, filter)
 		local getAura = C_UnitAuras and C_UnitAuras.GetAuraDataByIndex
-		local a = getAura and getAura(unit, index, filter)
-		if not a then return nil end
+		-- Aura data can be refused (secret) for tainted callers: treat that as "no aura"
+		local ok, a = pcall(getAura or function() end, unit, index, filter)
+		if not ok or not a then return nil end
 		return a.name, a.icon, a.applications, a.dispelName, a.duration, a.expirationTime, a.sourceUnit,
 			a.isStealable, a.nameplateShowPersonal, a.spellId, a.canApplyAura, a.isBossAura
 	end

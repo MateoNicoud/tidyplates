@@ -16,7 +16,12 @@ local select, pairs, tostring  = select, pairs, tostring 			    -- Local functio
 local CreateTidyPlatesStatusbar = CreateTidyPlatesStatusbar			    -- Local function copy
 local WorldFrame, UIParent = WorldFrame, UIParent
 -- Without C_NamePlate there is nothing to theme; fail soft so the addon still loads
-local GetNamePlateForUnit = C_NamePlate and C_NamePlate.GetNamePlateForUnit or function() return nil end
+-- Unit events also fire for "target", "targettarget", etc.; the API errors on anything but a nameplate token
+local RawGetNamePlateForUnit = C_NamePlate and C_NamePlate.GetNamePlateForUnit
+local function GetNamePlateForUnit(unitid)
+	if not RawGetNamePlateForUnit or type(unitid) ~= "string" or not unitid:find("^nameplate") then return nil end
+	return RawGetNamePlateForUnit(unitid)
+end
 
 -- Internal Data
 local Plates, PlatesVisible, PlatesFading, GUID = {}, {}, {}, {}	            	-- Plate Lists
@@ -88,6 +93,9 @@ local OnNewNameplate
 local ForEachPlate, HideBlizzardFrame
 
 -- UpdateReferences
+-- IsSecret: true for values the client hides from addon code (nil-safe on clients without the concept)
+local function IsSecret(value) return issecretvalue and issecretvalue(value) or false end
+
 local function UpdateReferences(plate)
 	nameplate = plate
 	extended = plate.extended
@@ -843,24 +851,38 @@ do
 
 		if channeled then
 			name, text, texture, startTime, endTime, isTradeSkill, notInterruptible = UnitChannelInfo(unitid)
-			--name, text, texture, startTimeMS, endTimeMS, isTradeSkill, notInterruptible = UnitChannelInfo("unit")
-
-			castBar:SetScript("OnUpdate", OnUpdateCastBarReverse)
 		else
 			name, text, texture, startTime, endTime, isTradeSkill, castID, notInterruptible = UnitCastingInfo(unitid)
-			castBar:SetScript("OnUpdate", OnUpdateCastBarForward)
 		end
 
-		if isTradeSkill then return end
+		if not IsSecret(isTradeSkill) and isTradeSkill then return end
+
+		-- Cast data may be "secret": Lua cannot compare or calculate with it, only hand it to widgets.
+		-- So timing comes from a duration object driving the bar, and the shield from an alpha toggle.
+		local duration
+		if channeled then duration = UnitChannelDuration and UnitChannelDuration(unitid)
+		else duration = UnitCastingDuration and UnitCastingDuration(unitid) end
+
+		if duration and castBar.SetTimerDuration then
+			castBar:SetScript("OnUpdate", nil)
+			castBar:SetTimerDuration(duration, Enum.StatusBarInterpolation.Immediate,
+				channeled and Enum.StatusBarTimerDirection.RemainingTime or Enum.StatusBarTimerDirection.ElapsedTime)
+		elseif not IsSecret(startTime) and not IsSecret(endTime) then
+			castBar:SetScript("OnUpdate", channeled and OnUpdateCastBarReverse or OnUpdateCastBarForward)
+			castBar:SetMinMaxValues( startTime, endTime )
+		end
 
 		unit.isCasting = true
-		unit.spellIsShielded = notInterruptible
+		if IsSecret(notInterruptible) then
+			-- Themes only ever see a plain boolean; the real value drives the shield texture below
+			unit.spellIsShielded = false
+		else
+			unit.spellIsShielded = notInterruptible and true or false
+		end
 		unit.spellInterruptible = not unit.spellIsShielded
 
 		visual.spelltext:SetText(text)
 		visual.spellicon:SetTexture(texture)
-
-		castBar:SetMinMaxValues( startTime, endTime ) 
 
 		local r, g, b, a = 1, 1, 0, 1
 
@@ -873,9 +895,16 @@ do
 
 		castBar:SetAlpha(a or 1)
 
-		if unit.spellIsShielded then
-			   visual.castnostop:Show(); visual.castborder:Hide()
-		else visual.castnostop:Hide(); visual.castborder:Show() end
+		if IsSecret(notInterruptible) and visual.castnostop.SetAlphaFromBoolean then
+			visual.castnostop:Show(); visual.castborder:Show()
+			visual.castnostop:SetAlphaFromBoolean(notInterruptible, 1, 0)
+			visual.castborder:SetAlphaFromBoolean(notInterruptible, 0, 1)
+		else
+			visual.castnostop:SetAlpha(1); visual.castborder:SetAlpha(1)
+			if unit.spellIsShielded then
+				visual.castnostop:Show(); visual.castborder:Hide()
+			else visual.castnostop:Hide(); visual.castborder:Show() end
+		end
 
 		UpdateIndicator_CustomScaleText()
 		UpdateIndicator_CustomAlpha()
@@ -909,7 +938,11 @@ do
 		local currentTime = GetTime() * 1000
 
 		-- Check to see if there's a spell being cast
-		if UnitCastingInfo(unitid) then OnStartCasting(plate, unitid, false)
+		-- (duration objects exist only while a cast runs, and unlike the cast info they are never secret to test)
+		if UnitCastingDuration then
+			if UnitCastingDuration(unitid) then OnStartCasting(plate, unitid, false)
+			elseif UnitChannelDuration and UnitChannelDuration(unitid) then OnStartCasting(plate, unitid, true) end
+		elseif UnitCastingInfo(unitid) then OnStartCasting(plate, unitid, false)
 		else
 		-- See if one is being channeled...
 			if UnitChannelInfo(unitid) then OnStartCasting(plate, unitid, true) end
