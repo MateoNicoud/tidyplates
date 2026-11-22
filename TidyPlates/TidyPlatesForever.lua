@@ -21,6 +21,14 @@ if not InterfaceOptions_AddCategory and Settings and Settings.RegisterCanvasLayo
 	local categories = {}
 	function InterfaceOptions_AddCategory(panel)
 		local name = panel.name
+
+		-- The Settings window calls OnCommit/OnRefresh/OnCancel/OnDefault; panels still set okay/refresh/cancel/default,
+		-- usually after registering, so look them up when called.
+		panel.OnCommit = panel.OnCommit or function() if panel.okay then panel.okay(panel) end end
+		panel.OnRefresh = panel.OnRefresh or function() if panel.refresh then panel.refresh(panel) end end
+		panel.OnCancel = panel.OnCancel or function() if panel.cancel then panel.cancel(panel) end end
+		panel.OnDefault = panel.OnDefault or function() if panel.default then panel.default(panel) end end
+
 		local parent = panel.parent and categories[panel.parent]
 		if parent then
 			categories[name] = Settings.RegisterCanvasLayoutSubcategory(parent, panel, name)
@@ -69,17 +77,17 @@ if not UnitBuff then
 end
 
 -- Blocked-action reporter: the client's "action blocked" popup does not name the function.
--- This prints it, with a short stack, whenever the client blames a Tidy Plates addon.
+-- While /tidydebug is on, it reports the function and a short stack through the error handler whenever the
+-- client blames a Tidy Plates addon (so it lands in the error window or BugSack).
 local blockedFrame = CreateFrame("Frame")
 blockedFrame:RegisterEvent("ADDON_ACTION_FORBIDDEN")
 blockedFrame:RegisterEvent("ADDON_ACTION_BLOCKED")
 blockedFrame:SetScript("OnEvent", function(_, event, addon, func)
-	if addon and tostring(addon):find("TidyPlates", 1, true) then
+	if TidyPlatesDebug and addon and tostring(addon):find("TidyPlates", 1, true) then
 		local report = "Tidy Plates "..event..": "..tostring(addon).." -> "..tostring(func)
-		print("|cffff5555"..report.."|r")
-		-- Also go through the error handler so it shows in the error window / BugSack with a stack
 		local handler = geterrorhandler and geterrorhandler()
-		if handler then handler(report.."\n"..(debugstack and debugstack(3, 8, 0) or "")) end
+		if handler then handler(report.."\n"..(debugstack and debugstack(3, 8, 0) or ""))
+		else print("|cffff5555"..report.."|r") end
 	end
 end)
 

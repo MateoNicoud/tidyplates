@@ -681,7 +681,6 @@ local function CreateInterfacePanel( objectName, panelTitle, parentFrameName)
                 panel:SetBackdropColor(.1, .1, .1, 1)
 
 		--[[
-		TidyPlatesEnableBackdrop(panel)
 		panel:SetBackdrop({ bgFile = "Interface/Tooltips/UI-Tooltip-Background",
 											edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
 											--edgeFile = "Interface/DialogFrame/UI-DialogBox-Gold-Border",

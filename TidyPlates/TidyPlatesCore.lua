@@ -863,13 +863,19 @@ do
 		if channeled then duration = UnitChannelDuration and UnitChannelDuration(unitid)
 		else duration = UnitCastingDuration and UnitCastingDuration(unitid) end
 
-		if duration and castBar.SetTimerDuration then
+		if duration and castBar.SetTimerDuration and Enum and Enum.StatusBarInterpolation and Enum.StatusBarTimerDirection then
 			castBar:SetScript("OnUpdate", nil)
 			castBar:SetTimerDuration(duration, Enum.StatusBarInterpolation.Immediate,
 				channeled and Enum.StatusBarTimerDirection.RemainingTime or Enum.StatusBarTimerDirection.ElapsedTime)
-		elseif not IsSecret(startTime) and not IsSecret(endTime) then
+		elseif startTime and endTime and not IsSecret(startTime) and not IsSecret(endTime) then
 			castBar:SetScript("OnUpdate", channeled and OnUpdateCastBarReverse or OnUpdateCastBarForward)
 			castBar:SetMinMaxValues( startTime, endTime )
+		else
+			-- The cast ended before we got here, or its timing cannot be read: show nothing rather than stale progress
+			castBar:SetScript("OnUpdate", nil)
+			castBar:Hide()
+			unit.isCasting = false
+			return
 		end
 
 		unit.isCasting = true
@@ -1047,8 +1053,6 @@ do
 		if plate then OnHealthUpdate(plate) end
 	end
 
-	CoreEvents.UNIT_HEALTH = CoreEvents.UNIT_HEALTH_FREQUENT
-
 	function CoreEvents:PLAYER_REGEN_ENABLED()
 		InCombat = false
 		SetUpdateAll()
@@ -1129,10 +1133,17 @@ do
 	TidyPlatesCore:SetFrameStrata("TOOLTIP") 	-- When parented to WorldFrame, causes OnUpdate handler to run close to last
 	TidyPlatesCore:SetScript("OnEvent", EventHandler)
 	-- pcall: an event the client does not know would otherwise abort loading the whole core
+	local registered = {}
 	for eventName in pairs(CoreEvents) do
-		if not pcall(TidyPlatesCore.RegisterEvent, TidyPlatesCore, eventName) and TidyPlatesDebug then
+		registered[eventName] = pcall(TidyPlatesCore.RegisterEvent, TidyPlatesCore, eventName)
+		if not registered[eventName] and TidyPlatesDebug then
 			print("TidyPlates: could not register "..eventName)
 		end
+	end
+	-- Clients without the "frequent" health event only have UNIT_HEALTH; use one of the two, never both
+	if not registered.UNIT_HEALTH_FREQUENT then
+		CoreEvents.UNIT_HEALTH = CoreEvents.UNIT_HEALTH_FREQUENT
+		pcall(TidyPlatesCore.RegisterEvent, TidyPlatesCore, "UNIT_HEALTH")
 	end
 end
 

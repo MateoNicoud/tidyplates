@@ -28,6 +28,15 @@ end
 
 function CreateTidyPlatesStatusbar(parent)
 	local frame = CreateFrame("StatusBar", nil, parent)
+
+	-- The native fill defaults to ARTWORK, the layer of the border textures; keep it below them.
+	-- The fill texture is replaced each time a texture is set, so do it in a wrapper.
+	local setTexture = frame.SetStatusBarTexture
+	frame.SetStatusBarTexture = function(self, ...)
+		setTexture(self, ...)
+		local fill = self:GetStatusBarTexture()
+		if fill then fill:SetDrawLayer("BORDER") end
+	end
 	frame:SetSize(1, 1)
 	frame:SetMinMaxValues(0, 1)
 	frame:SetValue(1)
