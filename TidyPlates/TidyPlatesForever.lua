@@ -60,22 +60,6 @@ if not GetSpecializationInfo then GetSpecializationInfo = SpecInfo.GetSpecializa
 if not GetSpecializationRole then GetSpecializationRole = SpecInfo.GetSpecializationRole or function() return nil end end
 if not GetActiveSpecGroup then GetActiveSpecGroup = SpecInfo.GetActiveSpecGroup or function() return 1 end end
 
--- Aura reads: rebuild the old UnitAura tuple from C_UnitAuras. Returns nothing if the API is missing,
--- which ends the callers' aura loops cleanly.
-if not UnitAura then
-	function UnitAura(unit, index, filter)
-		local getAura = C_UnitAuras and C_UnitAuras.GetAuraDataByIndex
-		-- Aura data can be refused (secret) for tainted callers: treat that as "no aura"
-		local ok, a = pcall(getAura or function() end, unit, index, filter)
-		if not ok or not a then return nil end
-		return a.name, a.icon, a.applications, a.dispelName, a.duration, a.expirationTime, a.sourceUnit,
-			a.isStealable, a.nameplateShowPersonal, a.spellId, a.canApplyAura, a.isBossAura
-	end
-end
-if not UnitBuff then
-	function UnitBuff(unit, index) return UnitAura(unit, index, "HELPFUL") end
-end
-
 -- Blocked-action reporter: the client's "action blocked" popup does not name the function.
 -- While /tidydebug is on, it reports the function and a short stack through the error handler whenever the
 -- client blames a Tidy Plates addon (so it lands in the error window or BugSack).
@@ -89,6 +73,39 @@ blockedFrame:SetScript("OnEvent", function(_, event, addon, func)
 		if handler then handler(report.."\n"..(debugstack and debugstack(3, 8, 0) or ""))
 		else print("|cffff5555"..report.."|r") end
 	end
+end)
+
+-- Error log: keeps the last Tidy Plates errors in the TidyPlatesErrorLog saved variable, so they can be read from
+-- WTF/Account/<account>/SavedVariables/TidyPlates.lua after a /reload, without copying them out of the game.
+-- Saved variables only exist once ADDON_LOADED fires, so early errors wait in a local buffer.
+local errorLog, earlyErrors = nil, {}
+
+local function RecordError(message)
+	local entry = date("%H:%M:%S ")..message
+	local list = errorLog or earlyErrors
+	list[#list + 1] = entry
+	if #list > 50 then tremove(list, 1) end
+end
+
+if seterrorhandler and geterrorhandler then
+	local previousHandler = geterrorhandler()
+	seterrorhandler(function(message, ...)
+		if type(message) == "string" and message:find("TidyPlates", 1, true) then
+			RecordError(message.."\n"..(debugstack and debugstack(2, 6, 0) or ""))
+		end
+		if previousHandler then return previousHandler(message, ...) end
+	end)
+end
+
+local logLoader = CreateFrame("Frame")
+logLoader:RegisterEvent("ADDON_LOADED")
+logLoader:SetScript("OnEvent", function(self, _, addon)
+	if addon ~= "TidyPlates" then return end
+	self:UnregisterEvent("ADDON_LOADED")
+	TidyPlatesErrorLog = TidyPlatesErrorLog or {}
+	errorLog = TidyPlatesErrorLog
+	for _, entry in ipairs(earlyErrors) do errorLog[#errorLog + 1] = entry end
+	while #errorLog > 50 do tremove(errorLog, 1) end
 end)
 
 -- /tidydebug toggles TidyPlatesDebug, which gates the core's debug prints.

@@ -2,11 +2,14 @@
 std = "lua51"
 max_line_length = false
 codes = true
+-- Style noise is switched off so every remaining warning is worth reading:
+-- unused variables/arguments (211-213), unused loop vars (231), shadowing (411-431), line whitespace (6xx).
+ignore = { "21[123]", "231", "311", "41[123]", "42[123]", "43[123]", "6.." }
 exclude_files = { "TidyPlates/BackupCore.lua", "TidyPlatesWidgets/_RangeWidget.lua" }
 
 -- Globals the addons define and share.
 globals = {
-	"TidyPlates", "TidyPlatesDebug", "TidyPlatesForever", "InterfaceOptions_AddCategory", "InterfaceOptionsFrame_OpenToCategory", "GetAddOnMetadata", "GetSpellInfo", "GetSpecialization", "GetSpecializationInfo", "GetSpecializationRole", "GetActiveSpecGroup", "C_SpecializationInfo", "UnitAura", "UnitBuff", "TidyPlatesEnableBackdrop", "TidyPlatesOptions",
+	"TidyPlates", "TidyPlatesDebug", "TidyPlatesForever", "TidyPlatesErrorLog", "seterrorhandler", "InterfaceOptions_AddCategory", "InterfaceOptionsFrame_OpenToCategory", "GetAddOnMetadata", "GetSpellInfo", "GetSpecialization", "GetSpecializationInfo", "GetSpecializationRole", "GetActiveSpecGroup", "C_SpecializationInfo", "TidyPlatesEnableBackdrop", "TidyPlatesOptions",
 	"TidyPlatesUtility", "TidyPlatesThemeList", "TidyPlatesHubMenus",
 	"TidyPlatesHubSettings", "TidyPlatesHubGlobal", "TidyPlatesHubCache",
 	"TidyPlatesSlashCommands", "SlashCmdList",
@@ -23,8 +26,8 @@ globals = {
 
 -- WoW API surface is huge; treat unknown globals as read-only fields rather than errors.
 read_globals = {
-	"WOW_PROJECT_ID", "WOW_PROJECT_CAMELOT", "C_NamePlate", "C_UnitAuras", "C_Timer",
-	"CreateFrame", "ShowUIPanel", "SettingsPanel", "UnitCastingDuration", "UnitChannelDuration", "Enum", "geterrorhandler", "debugstack", "CreateColor", "issecretvalue", "Mixin", "BackdropTemplateMixin", "Settings", "WorldFrame", "UIParent", "GameTooltip",
+	"WOW_PROJECT_ID", "WOW_PROJECT_CAMELOT", "C_NamePlate", "C_UnitAuras", "C_XMLUtil", "AuraContainerSortMethod", "AuraContainerSortDirection", "AnchorUtil", "C_Timer",
+	"CreateFrame", "C_Spell", "C_AddOns", "ShowUIPanel", "SettingsPanel", "UnitCastingDuration", "UnitChannelDuration", "Enum", "geterrorhandler", "debugstack", "CreateColor", "issecretvalue", "Mixin", "BackdropTemplateMixin", "Settings", "WorldFrame", "UIParent", "GameTooltip",
 	"UnitName", "UnitGUID", "UnitExists", "UnitIsUnit", "UnitClass", "UnitReaction",
 	"UnitHealth", "UnitHealthMax", "UnitAffectingCombat", "UnitCanAttack", "UnitIsPlayer",
 	"UnitThreatSituation", "UnitDetailedThreatSituation", "UnitCastingInfo", "UnitChannelInfo",
