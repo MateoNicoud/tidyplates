@@ -333,7 +333,11 @@ local HealerTrackWatcher = CreateFrame("Frame")
 local function Enable()
 	--print("TidyPlatesWidgets.HealerTrack:Enable")
 	HealerTrackWatcher:SetScript("OnEvent", CombatEventHandler)
-	HealerTrackWatcher:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+	-- The combat log is closed to addons on Forever: registering COMBAT_LOG_EVENT_UNFILTERED raises
+	-- ADDON_ACTION_FORBIDDEN (a pcall does not prevent it). Healers can then only be found via the scoreboard.
+	if not TidyPlatesForever then
+		HealerTrackWatcher:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+	end
 	HealerTrackWatcher:RegisterEvent("PLAYER_ENTERING_WORLD")
 	HealerTrackWatcher:RegisterEvent("UPDATE_BATTLEFIELD_SCORE")
 	WipeLists()
