@@ -32,6 +32,11 @@ if not InterfaceOptions_AddCategory and Settings and Settings.RegisterCanvasLayo
 	end
 end
 
+-- Forever has no specializations: report "none" so callers fall back to their defaults.
+if not GetSpecialization then function GetSpecialization() return nil end end
+if not GetSpecializationInfo then function GetSpecializationInfo() return nil end end
+if not GetSpecializationRole then function GetSpecializationRole() return nil end end
+
 -- /tidydebug toggles TidyPlatesDebug, which gates the core's debug prints.
 -- Output goes to the chat window so it can be copied.
 SLASH_TIDYDEBUG1 = '/tidydebug'

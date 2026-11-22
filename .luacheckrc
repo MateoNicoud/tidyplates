@@ -6,7 +6,7 @@ exclude_files = { "TidyPlates/BackupCore.lua", "TidyPlatesWidgets/_RangeWidget.l
 
 -- Globals the addons define and share.
 globals = {
-	"TidyPlates", "TidyPlatesDebug", "TidyPlatesForever", "InterfaceOptions_AddCategory", "GetAddOnMetadata", "GetSpellInfo", "TidyPlatesEnableBackdrop", "TidyPlatesOptions",
+	"TidyPlates", "TidyPlatesDebug", "TidyPlatesForever", "InterfaceOptions_AddCategory", "GetAddOnMetadata", "GetSpellInfo", "GetSpecialization", "GetSpecializationInfo", "GetSpecializationRole", "TidyPlatesEnableBackdrop", "TidyPlatesOptions",
 	"TidyPlatesUtility", "TidyPlatesThemeList", "TidyPlatesHubMenus",
 	"TidyPlatesHubSettings", "TidyPlatesHubGlobal", "TidyPlatesHubCache",
 	"TidyPlatesSlashCommands", "SlashCmdList",
@@ -34,7 +34,7 @@ read_globals = {
 	"hooksecurefunc", "wipe", "tinsert", "tremove", "strsplit", "format", "date", "time",
 	"ceil", "floor", "max", "min", "sort", "gsub", "strfind", "bit", "getglobal",
 	"IsSpellKnown", "UNSPECIFIED_TOTEM", "ColorPickerFrame", "OpacitySliderFrame", "UnitInRaid", "UnitInParty",
-	"PlaySound", "UnitClassBase", "GetSpecializationInfo", "GetSpecialization", "GetSpecializationRole",
+	"PlaySound", "UnitClassBase",
 	"UnitPowerMax", "UnitPower", "UnitPowerType", "UnitGroupRolesAssigned", "InterfaceOptionsFrame_OpenToCategory",
 	"InterfaceOptionsFrame", "InterfaceOptionsListButton_ToggleSubCategories", "INTERFACEOPTIONS_ADDONCATEGORIES",
 	"HasPetUI", "ReloadUI", "UnitAura", "UnitBuff", "PowerBarColor", "SPELL_POWER_CHI", "SPEC_MONK_BREWMASTER",
