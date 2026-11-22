@@ -13,7 +13,7 @@ Add a new polyfill there, once, and list it in `.luacheckrc` `globals`.
 ## Secret values
 
 The client hides enemy health, cast times and the non-interruptible flag behind secret values: Lua cannot compare, calculate
-with or branch on them. Pass them only to widget APIs (`StatusBar:SetValue`, `SetTimerDuration`, `SetAlphaFromBoolean`,
+with or branch on them. Never test one as a boolean either (`secret or ""`, `a and b or c`, `if secret then`): that raises an error, so hand a secret string straight to `SetText`. Pass them only to widget APIs (`StatusBar:SetValue`, `SetTimerDuration`, `SetAlphaFromBoolean`,
 `FontString:SetText`). Test with `issecretvalue`.
 
 - The core stores raw health on `extended` (`healthRaw`, `healthmaxRaw`) for the bar only. `unit.health` and `unit.healthmax` hold plain
@@ -22,6 +22,10 @@ with or branch on them. Pass them only to widget APIs (`StatusBar:SetValue`, `Se
 - Cast timing comes from `UnitCastingDuration` / `UnitChannelDuration` driving the bar with `SetTimerDuration`.
 - Addon code and slash commands cannot read secret auras (`GetAuraDataByIndex`, `GetUnitAuras` are refused). The client has
   `CustomAuraContainerTemplate` (an `AuraContainer` it fills and draws); the Aura Widget builds one per Plate and only configures it (filter string, max count, sort, growth, button look), so Hub aura filters by name, type or caster no longer apply. Tank Track reads the player's own auras with `C_UnitAuras.GetPlayerAuraBySpellID`.
+
+## Per-Plate state
+
+The core wipes `extended.unit` when a Plate activates, so a field on `unit` survives only if it is set after that wipe (`unit.frame` was lost to it until issue #10). The Hub reaches the Plate through `unit.frame`; the Hub's debuff rules read `unit.frame.widgets.DebuffWidget`.
 
 ## Forbidden and protected things
 
