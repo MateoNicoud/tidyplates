@@ -431,7 +431,6 @@ do
 		PlatesVisible[plate] = unitid
 		PlatesByUnit[unitid] = plate
 
-		unit.frame = extended
 		unit.alpha = 0
 		unit.isTarget = false
 		unit.isMouseover = false
@@ -444,6 +443,7 @@ do
 
 		wipe(extended.unit)
 		wipe(extended.unitcache)
+		unit.frame = extended	-- after the wipe, or the Hub never finds the Plate
 
 
 		-- For Fading In
@@ -873,7 +873,8 @@ do
 			if style.customtext.show then
 				if activetheme.SetCustomText then
 					local text, r, g, b, a = activetheme.SetCustomText(unit)
-					visual.customtext:SetText( text or "")
+					-- A secret string cannot be tested as a boolean, only handed to SetText
+					if IsSecret(text) then visual.customtext:SetText(text) else visual.customtext:SetText(text or "") end
 					visual.customtext:SetTextColor(r or 1, g or 1, b or 1, a or 1)
 				else visual.customtext:SetText("") end
 			end

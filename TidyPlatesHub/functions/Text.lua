@@ -114,7 +114,9 @@ end
 local function PercentText(unit)
 	if unit.healthSecret then
 		local pct = TidyPlates.GetSecretHealthPercent(unit)
-		return pct ~= nil and string.format("%.0f%%", pct) or ""
+		-- No truthiness test on the result: a secret string cannot be used as a boolean
+		if pct == nil then return "" end
+		return string.format("%.0f%%", pct)
 	end
 	return ceil(100*(unit.health/unit.healthmax)).."%"
 end
