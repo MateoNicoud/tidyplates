@@ -11,6 +11,7 @@ local SquareArt = "Interface\\AddOns\\TidyPlatesWidgets\\Aura\\AuraFrameSquare"
 local AuraFont = "FONTS\\ARIALN.TTF"
 
 local GROUP = "debuffs"
+local BUFF_GROUP = "enemybuffs"
 -- One entry per Hub "Icon Style": icon size, art, texture crop and column count (two rows of icons)
 local STYLES = {
 	wide = { width = 26.5, height = 14.5, art = WideArt, texCoord = { .07, 1-.07, .23, 1-.23 }, columns = 3, borderX = 1 },
@@ -22,7 +23,8 @@ local ICON_SPACING = 5
 
 -- Filter strings the container applies on the client side (no per-aura Lua decisions are possible).
 -- Hostile units: only the player's own debuffs. Friendly units: every debuff, or only the ones the player can dispel.
-local FilterOptions = { friendlyDispellable = false }
+local FilterOptions = { friendlyDispellable = false, enemyDispellableBuffs = false }
+local FILTER_ENEMY_BUFFS = "HELPFUL|RAID_PLAYER_DISPELLABLE"  -- buffs on enemies the player can dispel or steal
 local FILTER_HOSTILE = "HARMFUL|PLAYER"
 local FILTER_FRIENDLY = "HARMFUL"
 local FILTER_FRIENDLY_DISPEL = "HARMFUL|RAID_PLAYER_DISPELLABLE"
@@ -105,6 +107,8 @@ local function ConfigureContainer(widget)
 	local layout = GetLayout()
 	container:SetAuraGroupMaxFrameCount(GROUP, Style.columns * DebuffRows)
 	container:SetAuraGroupLayout(GROUP, layout)
+	container:SetAuraGroupMaxFrameCount(BUFF_GROUP, Style.columns)
+	container:SetAuraGroupLayout(BUFF_GROUP, layout)
 	container:SetFlowLayoutMaximumLineSize(layout.maximumLineSize)
 	for _, button in ipairs(widget.buttons) do pcall(SkinButton, button) end
 end
@@ -122,6 +126,7 @@ local function UpdateWidgetContext(widget, unit)
 
 	local filter = GetFilterString(unitid)
 	container:SetAuraGroupFilterString(GROUP, filter)
+	container:SetAuraGroupEnabled(BUFF_GROUP, FilterOptions.enemyDispellableBuffs and not UnitIsFriend("player", unitid))
 	if widget.auraUnit == unitid and widget.auraFilter == filter then
 		container:UpdateAllAuras()
 	else
@@ -154,6 +159,14 @@ local function CreateAuraWidget(parent)
 			initializeFrame = function(button) InitButton(widget, button) end,
 			layout = GetLayout(),
 		})
+		container:AddAuraGroup(BUFF_GROUP, FILTER_ENEMY_BUFFS, {
+			maxFrameCount = Style.columns,
+			sortMethod = AuraContainerSortMethod.Expiration,
+			sortDirection = AuraContainerSortDirection.Normal,
+			initializeFrame = function(button) InitButton(widget, button) end,
+			layout = GetLayout(),
+		})
+		container:SetAuraGroupEnabled(BUFF_GROUP, false)
 		container:SetFlowLayoutAnchorPoint("BOTTOMLEFT")
 		container:SetFlowLayoutGrowthDirection(AnchorUtil.FlowDirection.Right, AnchorUtil.FlowDirection.Up)
 		container:SetFlowLayoutMaximumLineSize(GetLayout().maximumLineSize)
@@ -188,10 +201,11 @@ end
 local function UseSquareDebuffIcon() UseDebuffStyle("square") end
 local function UseWideDebuffIcon() UseDebuffStyle("wide") end
 
--- Hub options that still make sense on secret auras: {friendlyDispellable = bool}
+-- Hub options that still make sense on secret auras: {friendlyDispellable = bool, enemyDispellableBuffs = bool}
 local function SetAuraFilterOptions(options)
 	if type(options) == "table" then
 		FilterOptions.friendlyDispellable = options.friendlyDispellable and true or false
+		FilterOptions.enemyDispellableBuffs = options.enemyDispellableBuffs and true or false
 		TidyPlates:ForceUpdate()
 	end
 end

@@ -37,7 +37,7 @@ TidyPlatesHubMenus.DebuffStyles = {
 
 
 -- The client draws and filters auras (secret values); see TidyPlatesWidgets/AuraWidget.lua.
--- The only aura option that still maps onto a container filter is WidgetAuraTrackDispelFriendly.
+-- Only WidgetAuraTrackDispelFriendly and WidgetAuraTrackStealable still map onto container filters.
 
 ---------------------------------------------------------------------------------------------------------
 -- Widget Initializers
@@ -123,7 +123,7 @@ local function OnVariableChange(vars)
 
 	LocalVars = vars
 
-	TidyPlatesWidgets.SetAuraFilterOptions({ friendlyDispellable = LocalVars.WidgetAuraTrackDispelFriendly })
+	TidyPlatesWidgets.SetAuraFilterOptions({ friendlyDispellable = LocalVars.WidgetAuraTrackDispelFriendly, enemyDispellableBuffs = LocalVars.WidgetAuraTrackStealable })
 end
 HubData.RegisterCallback(OnVariableChange)
 
