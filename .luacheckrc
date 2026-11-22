@@ -21,13 +21,13 @@ globals = {
 	"TankWatcher", "AlphaFunctionsTank", "AlphaFunctionsDamage",
 	"ShowTidyPlatesHubPanel", "ShowTidyPlatesHubDamagePanel", "ShowTidyPlatesHubTankPanel",
 	"ShowTidyPlatesHubHealerPanel", "ShowTidyPlatesHubGladiatorPanel",
-	"SLASH_TIDYPLATES1", "SLASH_TIDYPLATES2", "SLASH_HUB1", "SLASH_EVAL1", "SLASH_TIDYDEBUG1",
+	"SLASH_TIDYPLATES1", "SLASH_TIDYPLATES2", "SLASH_HUB1", "SLASH_EVAL1", "SLASH_TIDYDEBUG1", "SLASH_TIDYHEALTH1",
 }
 
 -- WoW API surface is huge; treat unknown globals as read-only fields rather than errors.
 read_globals = {
 	"WOW_PROJECT_ID", "WOW_PROJECT_CAMELOT", "C_NamePlate", "C_UnitAuras", "C_XMLUtil", "AuraContainerSortMethod", "AuraContainerSortDirection", "AnchorUtil", "C_Timer",
-	"CreateFrame", "C_Spell", "C_AddOns", "ShowUIPanel", "SettingsPanel", "UnitCastingDuration", "UnitChannelDuration", "Enum", "geterrorhandler", "debugstack", "CreateColor", "issecretvalue", "Mixin", "BackdropTemplateMixin", "Settings", "WorldFrame", "UIParent", "GameTooltip",
+	"CreateFrame", "C_Spell", "C_AddOns", "ShowUIPanel", "SettingsPanel", "UnitCastingDuration", "UnitChannelDuration", "Enum", "geterrorhandler", "debugstack", "CreateColor", "issecretvalue", "UnitHealthPercent", "CurveConstants", "C_CurveUtil", "Mixin", "BackdropTemplateMixin", "Settings", "WorldFrame", "UIParent", "GameTooltip",
 	"UnitName", "UnitGUID", "UnitExists", "UnitIsUnit", "UnitClass", "UnitReaction",
 	"UnitHealth", "UnitHealthMax", "UnitAffectingCombat", "UnitCanAttack", "UnitIsPlayer",
 	"UnitThreatSituation", "UnitDetailedThreatSituation", "UnitCastingInfo", "UnitChannelInfo",

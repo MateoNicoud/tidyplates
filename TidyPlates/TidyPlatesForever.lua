@@ -116,6 +116,23 @@ SlashCmdList['TIDYDEBUG'] = function()
 	print("|cff89f559Tidy Plates|r debug: " .. (TidyPlatesDebug and "ON" or "OFF"))
 end
 
+-- /tidyhealth: prints what the client says about the target's health (for the secret-health work, issue #10).
+SLASH_TIDYHEALTH1 = '/tidyhealth'
+SlashCmdList['TIDYHEALTH'] = function()
+	local unit = "target"
+	local scale = CurveConstants and CurveConstants.ScaleTo100
+	print("|cff89f559Tidy Plates|r UnitHealthPercent:", type(UnitHealthPercent), "CurveConstants.ScaleTo100:", type(scale),
+		"C_CurveUtil:", type(C_CurveUtil), "secret health:", issecretvalue and issecretvalue(UnitHealth(unit)))
+	if UnitHealthPercent then
+		local ok, pct = pcall(UnitHealthPercent, unit, true, scale)
+		print("  with curve:", ok, issecretvalue and issecretvalue(pct) and "secret" or pct)
+		ok, pct = pcall(UnitHealthPercent, unit, true)
+		print("  without curve:", ok, issecretvalue and issecretvalue(pct) and "secret" or pct)
+		ok, pct = pcall(function() return string.format("%.0f%%", (UnitHealthPercent(unit, true, scale))) end)
+		print("  string.format:", ok, pct)
+	end
+end
+
 -- Frames need backdrop methods mixed in on clients that dropped them from plain frames.
 -- Call on a frame before SetBackdrop; harmless if the frame already has them.
 function TidyPlatesEnableBackdrop(frame)

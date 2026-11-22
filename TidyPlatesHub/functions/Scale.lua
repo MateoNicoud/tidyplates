@@ -24,7 +24,9 @@ local MiniMobScale = .7
 
 -- By Low Health
 local function ScaleFunctionByLowHealth(unit)
-	if unit.health/unit.healthmax < LocalVars.LowHealthThreshold then return LocalVars.ScaleSpotlight end
+	if unit.healthSecret then
+		TidyPlates.RequestHealthStep(unit, "scale", LocalVars.LowHealthThreshold, LocalVars.ScaleSpotlight)
+	elseif unit.health/unit.healthmax < LocalVars.LowHealthThreshold then return LocalVars.ScaleSpotlight end
 end
 
 -- By Elite
