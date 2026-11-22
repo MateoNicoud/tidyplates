@@ -32,10 +32,13 @@ if not InterfaceOptions_AddCategory and Settings and Settings.RegisterCanvasLayo
 	end
 end
 
--- Forever has no specializations: report "none" so callers fall back to their defaults.
-if not GetSpecialization then function GetSpecialization() return nil end end
-if not GetSpecializationInfo then function GetSpecializationInfo() return nil end end
-if not GetSpecializationRole then function GetSpecializationRole() return nil end end
+-- Specialization/talent APIs live in C_SpecializationInfo on this client; the old globals are gone.
+-- Use the namespaced function when it exists, otherwise report "none" so callers fall back to defaults.
+local SpecInfo = C_SpecializationInfo or {}
+if not GetSpecialization then GetSpecialization = SpecInfo.GetSpecialization or function() return nil end end
+if not GetSpecializationInfo then GetSpecializationInfo = SpecInfo.GetSpecializationInfo or function() return nil end end
+if not GetSpecializationRole then GetSpecializationRole = SpecInfo.GetSpecializationRole or function() return nil end end
+if not GetActiveSpecGroup then GetActiveSpecGroup = SpecInfo.GetActiveSpecGroup or function() return 1 end end
 
 -- Aura reads: rebuild the old UnitAura tuple from C_UnitAuras. Returns nothing if the API is missing,
 -- which ends the callers' aura loops cleanly.

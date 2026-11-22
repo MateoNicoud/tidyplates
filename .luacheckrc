@@ -6,7 +6,7 @@ exclude_files = { "TidyPlates/BackupCore.lua", "TidyPlatesWidgets/_RangeWidget.l
 
 -- Globals the addons define and share.
 globals = {
-	"TidyPlates", "TidyPlatesDebug", "TidyPlatesForever", "InterfaceOptions_AddCategory", "GetAddOnMetadata", "GetSpellInfo", "GetSpecialization", "GetSpecializationInfo", "GetSpecializationRole", "UnitAura", "UnitBuff", "TidyPlatesEnableBackdrop", "TidyPlatesOptions",
+	"TidyPlates", "TidyPlatesDebug", "TidyPlatesForever", "InterfaceOptions_AddCategory", "GetAddOnMetadata", "GetSpellInfo", "GetSpecialization", "GetSpecializationInfo", "GetSpecializationRole", "GetActiveSpecGroup", "C_SpecializationInfo", "UnitAura", "UnitBuff", "TidyPlatesEnableBackdrop", "TidyPlatesOptions",
 	"TidyPlatesUtility", "TidyPlatesThemeList", "TidyPlatesHubMenus",
 	"TidyPlatesHubSettings", "TidyPlatesHubGlobal", "TidyPlatesHubCache",
 	"TidyPlatesSlashCommands", "SlashCmdList",
@@ -41,7 +41,7 @@ read_globals = {
 	"IsShiftKeyDown", "GetShapeshiftFormID", "GetPartyAssignment", "GetGuildInfo", "UnitSelectionColor",
 	"UnitPlayerOrPetInParty", "UnitPlayerControlled", "UnitPVPName", "UnitLevel", "UnitIsTapDenied", "UnitIsFriend",
 	"UnitFactionGroup", "UnitEffectiveLevel", "UnitClassification", "UNIT_LEVEL_TEMPLATE", "UIDropDownMenu_AddButton",
-	"NAMEPLATE_FONT", "IsActiveBattlefieldArena", "HideUIPanel", "GetNumBattlefieldScores", "GetCreatureDifficultyColor",
+	"NAMEPLATE_FONT", "HideUIPanel", "GetNumBattlefieldScores", "GetCreatureDifficultyColor",
 	"GetComboPoints", "GetBuildInfo", "GetBattlefieldScore", "GetActiveSpecGroup",
 	"RequestBattlefieldScoreData", "CombatLogGetCurrentEventInfo", "COMBATLOG_OBJECT_REACTION_FRIENDLY",
 	"COMBATLOG_OBJECT_CONTROL_PLAYER", "SHOW_CLASS_COLOR_IN_V_KEY", "OPTION_TOOLTIP_SHOW_CLASS_COLOR_IN_V_KEY",
