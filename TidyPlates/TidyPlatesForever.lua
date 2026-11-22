@@ -59,8 +59,11 @@ blockedFrame:RegisterEvent("ADDON_ACTION_FORBIDDEN")
 blockedFrame:RegisterEvent("ADDON_ACTION_BLOCKED")
 blockedFrame:SetScript("OnEvent", function(_, event, addon, func)
 	if addon and tostring(addon):find("TidyPlates", 1, true) then
-		print("|cffff5555Tidy Plates "..event.."|r "..tostring(addon).." -> "..tostring(func))
-		print(debugstack and debugstack(3, 6, 0) or "")
+		local report = "Tidy Plates "..event..": "..tostring(addon).." -> "..tostring(func)
+		print("|cffff5555"..report.."|r")
+		-- Also go through the error handler so it shows in the error window / BugSack with a stack
+		local handler = geterrorhandler and geterrorhandler()
+		if handler then handler(report.."\n"..(debugstack and debugstack(3, 8, 0) or "")) end
 	end
 end)
 
