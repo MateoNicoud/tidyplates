@@ -42,8 +42,8 @@ local ActiveProfile = "None"
 
 -- Panel labels. Forever has two talent groups (dual spec), not class specializations.
 local Labels = {
-	enUS = { primary = "Primary Talents", secondary = "Secondary Talents", active = "Active", useRole = "Use group role for the profile" },
-	frFR = { primary = "Principale", secondary = "Secondaire", active = "active", useRole = "Utiliser le rôle de groupe" },
+	enUS = { primary = "Primary Talents", secondary = "Secondary Talents", active = "Active", useRole = "Use group role for the profile", distance = "Nameplate Distance" },
+	frFR = { primary = "Principale", secondary = "Secondaire", active = "active", useRole = "Utiliser le rôle de groupe", distance = "Distance des plaques" },
 }
 local L = Labels[GetLocale()] or Labels.enUS
 
@@ -56,6 +56,7 @@ TidyPlatesOptions = {
 	ThirdSpecProfile = DefaultProfile,
 	FourthSpecProfile = DefaultProfile,
 	UseGroupRole = true,
+	NameplateDistance = false,		-- false: leave the client value alone
 
 	FriendlyAutomation = NO_AUTOMATION,
 	EnemyAutomation = NO_AUTOMATION,
@@ -118,6 +119,19 @@ end
 -- Panel
 -------------------------------------------------------------------------------------
 local ThemeDropdownMenuItems = {}
+
+-- Nameplate view distance. The CVar cannot be changed in combat, so a request made then waits for it to end.
+local DISTANCE_CVAR = "nameplateMaxDistance"
+local DISTANCE_MIN, DISTANCE_MAX = 20, 60
+local distancePending = false
+
+local function ApplyNameplateDistance()
+	local distance = TidyPlatesOptions.NameplateDistance
+	if not distance then return end
+	if InCombatLockdown() then distancePending = true; return end
+	distancePending = false
+	SetCVar(DISTANCE_CVAR, distance)
+end
 
 local function ApplyAutomationSettings()
 	SetCastBars(not TidyPlatesOptions.DisableCastBars)
@@ -206,6 +220,7 @@ local function SetPanelValues(panel)
 	panel.ActiveThemeDropdown:SetValue(TidyPlatesOptions.ActiveTheme or FirstTryTheme)	-- same fallback the core uses
 
 	panel.UseGroupRole:SetChecked(TidyPlatesOptions.UseGroupRole ~= false)
+	panel.NameplateDistance:SetValue(TidyPlatesOptions.NameplateDistance or tonumber(GetCVar(DISTANCE_CVAR)) or 41)
 	panel.FirstSpecDropdown:SetValue(TidyPlatesOptions.FirstSpecProfile)
 	panel.SecondSpecDropdown:SetValue(TidyPlatesOptions.SecondSpecProfile)
 	panel.ThirdSpecDropdown:SetValue(TidyPlatesOptions.ThirdSpecProfile)
@@ -440,6 +455,20 @@ local function BuildInterfacePanel(panel)
 		ApplyProfile()
 	end)
 
+	-- Nameplate distance (only written once the player moves the slider)
+	panel.NameplateDistance = PanelHelpers:CreateSliderFrame("TidyPlatesOptions_NameplateDistance", panel, L.distance,
+		tonumber(GetCVar(DISTANCE_CVAR)) or 41, DISTANCE_MIN, DISTANCE_MAX, 1, "ACTUAL")
+	panel.NameplateDistance:SetPoint("TOPLEFT", panel.UseGroupRole, "TOPLEFT", 6, -62)
+	panel.NameplateDistance:SetWidth(200)
+	panel.NameplateDistance:SetScript("OnValueChanged", function(self, value, userInput)
+		value = floor(value + 0.5)
+		self.Value:SetText(tostring(value))
+		if userInput then
+			TidyPlatesOptions.NameplateDistance = value
+			ApplyNameplateDistance()
+		end
+	end)
+
 	-- Reset
 	ResetButton = CreateFrame("Button", "TidyPlatesOptions_ResetButton", panel, "TidyPlatesPanelButtonTemplate")
 	ResetButton:SetPoint("BOTTOMRIGHT", -16, 8)
@@ -517,9 +546,11 @@ function panelevents:PLAYER_ENTERING_WORLD()
 
 	ApplyPanelSettings()
 	ApplyAutomationSettings()
+	ApplyNameplateDistance()
 end
 
 function panelevents:PLAYER_REGEN_ENABLED()
+	if distancePending then ApplyNameplateDistance() end
 	SetNameplateVisibility("nameplateShowEnemies", TidyPlatesOptions.EnemyAutomation, false)
 	SetNameplateVisibility("nameplateShowFriends", TidyPlatesOptions.FriendlyAutomation, false)
 end
