@@ -61,7 +61,6 @@ local TankAuras = {
 }
 
 local function UpdatePlayerRole()
-
 	local playerTankAura = false
 
 	-- Look at the Player's Specialization

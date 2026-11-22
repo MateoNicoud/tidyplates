@@ -10,10 +10,14 @@ local WideArt = "Interface\\AddOns\\TidyPlatesWidgets\\Aura\\AuraFrameWide"
 local SquareArt = "Interface\\AddOns\\TidyPlatesWidgets\\Aura\\AuraFrameSquare"
 local AuraFont = "FONTS\\ARIALN.TTF"
 
-local GROUP = "main"
-local DebuffColumns = 3
-local DebuffLimit = 6
-local useWideIcons = true
+local GROUP = "debuffs"
+-- One entry per Hub "Icon Style": icon size, art, texture crop and column count (two rows of icons)
+local STYLES = {
+	wide = { width = 26.5, height = 14.5, art = WideArt, texCoord = { .07, 1-.07, .23, 1-.23 }, columns = 3, borderX = 1 },
+	square = { width = 16.5, height = 14.5, art = SquareArt, texCoord = { .10, 1-.07, .12, 1-.12 }, columns = 5, borderX = 0 },
+}
+local Style = STYLES.wide
+local DebuffRows = 2
 local ICON_SPACING = 5
 
 -- Filter strings the container applies on the client side (no per-aura Lua decisions are possible).
@@ -43,23 +47,17 @@ end
 -- created it: addon code may only size and anchor it inside initializeFrame, so later size changes go through
 -- the container layout (elementWidth/elementHeight), never through the button.
 local function SkinButton(button)
-	local art, texCoord
-	if useWideIcons then
-		art, texCoord = WideArt, { .07, 1-.07, .23, 1-.23 }
-	else
-		art, texCoord = SquareArt, { .10, 1-.07, .12, 1-.12 }
-	end
-	button.Icon:SetTexCoord(unpack(texCoord))
-	button.Border:SetTexture(art)
+	button.Icon:SetTexCoord(unpack(Style.texCoord))
+	button.Border:SetTexture(Style.art)
 end
 
 local function StyleButton(button)
-	button:SetSize(useWideIcons and 26.5 or 16.5, 14.5)
+	button:SetSize(Style.width, Style.height)
 	button.Icon:SetAllPoints(button)
 	button.Cooldown:SetAllPoints(button)
 	button.Border:SetSize(32, 32)
 	button.Border:ClearAllPoints()
-	button.Border:SetPoint("CENTER", useWideIcons and 1 or 0, -2)
+	button.Border:SetPoint("CENTER", Style.borderX, -2)
 	button.Count:ClearAllPoints()
 	button.Count:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0, -2)
 	SkinButton(button)
@@ -92,21 +90,22 @@ end
 -------------------------------------------------------------
 local function GetLayout()
 	return {
-		elementWidth = useWideIcons and 26.5 or 16.5,
-		elementHeight = 14.5,
+		elementWidth = Style.width,
+		elementHeight = Style.height,
 		elementSpacing = ICON_SPACING,
 		lineSpacing = 8,
 		groupSpacing = ICON_SPACING,
 		groupLineSpacing = 8,
-		maximumLineSize = DebuffColumns * ((useWideIcons and 26.5 or 16.5) + ICON_SPACING) + 1,
+		maximumLineSize = Style.columns * (Style.width + ICON_SPACING) + 1,
 	}
 end
 
 local function ConfigureContainer(widget)
 	local container = widget.container
-	container:SetAuraGroupMaxFrameCount(GROUP, DebuffLimit)
-	container:SetAuraGroupLayout(GROUP, GetLayout())
-	container:SetFlowLayoutMaximumLineSize(GetLayout().maximumLineSize)
+	local layout = GetLayout()
+	container:SetAuraGroupMaxFrameCount(GROUP, Style.columns * DebuffRows)
+	container:SetAuraGroupLayout(GROUP, layout)
+	container:SetFlowLayoutMaximumLineSize(layout.maximumLineSize)
 	for _, button in ipairs(widget.buttons) do pcall(SkinButton, button) end
 end
 
@@ -149,7 +148,7 @@ local function CreateAuraWidget(parent)
 		container:SetSize(1, 1)
 		container:SetPoint("LEFT", widget)
 		container:AddAuraGroup(GROUP, FILTER_HOSTILE, {
-			maxFrameCount = DebuffLimit,
+			maxFrameCount = Style.columns * DebuffRows,
 			sortMethod = AuraContainerSortMethod.Expiration,
 			sortDirection = AuraContainerSortDirection.Normal,
 			initializeFrame = function(button) InitButton(widget, button) end,
@@ -181,19 +180,13 @@ local function ReconfigureAll()
 	TidyPlates:ForceUpdate()
 end
 
-local function UseSquareDebuffIcon()
-	useWideIcons = false
-	DebuffColumns = 5
-	DebuffLimit = DebuffColumns * 2
+local function UseDebuffStyle(name)
+	Style = STYLES[name]
 	ReconfigureAll()
 end
 
-local function UseWideDebuffIcon()
-	useWideIcons = true
-	DebuffColumns = 3
-	DebuffLimit = DebuffColumns * 2
-	ReconfigureAll()
-end
+local function UseSquareDebuffIcon() UseDebuffStyle("square") end
+local function UseWideDebuffIcon() UseDebuffStyle("wide") end
 
 -- Hub options that still make sense on secret auras: {friendlyDispellable = bool}
 local function SetAuraFilterOptions(options)
@@ -203,10 +196,6 @@ local function SetAuraFilterOptions(options)
 	end
 end
 
--- Auras are filtered by the client now; kept so older callers do not break.
-local function EnableAuraWatcher() end
-local function DisableAuraWatcher() end
-
 -----------------------------------------------------
 -- External
 -----------------------------------------------------
@@ -215,8 +204,6 @@ TidyPlatesWidgets.UseSquareDebuffIcon = UseSquareDebuffIcon
 TidyPlatesWidgets.UseWideDebuffIcon = UseWideDebuffIcon
 TidyPlatesWidgets.SetAuraFilterOptions = SetAuraFilterOptions
 TidyPlatesWidgets.CreateAuraWidget = CreateAuraWidget
-TidyPlatesWidgets.EnableAuraWatcher = EnableAuraWatcher
-TidyPlatesWidgets.DisableAuraWatcher = DisableAuraWatcher
 
 -----------------------------------------------------
 -- Soon to be deprecated
