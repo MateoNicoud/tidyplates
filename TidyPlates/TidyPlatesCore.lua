@@ -388,6 +388,8 @@ do
 
 	-- OnHideNameplate
 	function OnHideNameplate(plate, unitid)
+		-- Plates we never set up (e.g. the personal bar) have no carrier
+		if not (plate and plate.carrier and plate.extended) then return end
 		--plate.extended:Hide()
 		plate.carrier:Hide()
 
@@ -954,6 +956,8 @@ do
 		if plate and not UnitIsUnit("player", unitid) then
 			local childFrame = plate:GetChildren()
 			if childFrame then childFrame:Hide() end
+			-- Create the extension lazily if NAME_PLATE_CREATED did not reach us
+			if not plate.carrier then OnNewNameplate(plate) end
 			OnShowNameplate(plate, unitid)
 		end
 
