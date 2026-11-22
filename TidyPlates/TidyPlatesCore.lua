@@ -15,7 +15,8 @@ local max = math.max
 local select, pairs, tostring  = select, pairs, tostring 			    -- Local function copy
 local CreateTidyPlatesStatusbar = CreateTidyPlatesStatusbar			    -- Local function copy
 local WorldFrame, UIParent = WorldFrame, UIParent
-local GetNamePlateForUnit = C_NamePlate.GetNamePlateForUnit
+-- Without C_NamePlate there is nothing to theme; fail soft so the addon still loads
+local GetNamePlateForUnit = C_NamePlate and C_NamePlate.GetNamePlateForUnit or function() return nil end
 
 -- Internal Data
 local Plates, PlatesVisible, PlatesFading, GUID = {}, {}, {}, {}	            	-- Plate Lists
@@ -84,7 +85,7 @@ local OnNewNameplate
 -- Main Loop
 local OnUpdate
 local OnNewNameplate
-local ForEachPlate
+local ForEachPlate, HideBlizzardFrame
 
 -- UpdateReferences
 local function UpdateReferences(plate)
@@ -107,6 +108,20 @@ end
 do
 	-- Local References
 	local WorldGetNumChildren, WorldGetChildren = WorldFrame.GetNumChildren, WorldFrame.GetChildren
+
+	-- HideBlizzardFrame: keeps Blizzard's own nameplate UnitFrame hidden under the Tidy Plates one.
+	-- The client may re-show it on its own updates, so hook Show once per frame.
+	function HideBlizzardFrame(plate)
+		local blizzFrame = plate.UnitFrame or plate:GetChildren()
+		if not blizzFrame or blizzFrame == plate.carrier then return end
+		blizzFrame:Hide()
+		if not blizzFrame.tidyHooked then
+			blizzFrame.tidyHooked = true
+			hooksecurefunc(blizzFrame, "Show", function(self)
+				if plate.extended and plate.extended.Active then self:Hide() end
+			end)
+		end
+	end
 
 	-- ForEachPlate
 	function ForEachPlate(functionToRun, ...)
@@ -144,7 +159,7 @@ do
 				plate.UpdateMe = false
 				plate.UpdateHealth = false
 
-				plate:GetChildren():Hide()
+				HideBlizzardFrame(plate)
 
 			end
 
@@ -938,7 +953,6 @@ do
 
 	function CoreEvents:NAME_PLATE_CREATED(...)
 		local plate = ...
-		local BlizzardFrame = plate:GetChildren()
 
 		-- hooksecurefunc([table,] "function", hookfunc)
 
@@ -954,8 +968,7 @@ do
 
 		-- We're not going to theme the personal unit bar
 		if plate and not UnitIsUnit("player", unitid) then
-			local childFrame = plate:GetChildren()
-			if childFrame then childFrame:Hide() end
+			HideBlizzardFrame(plate)
 			-- Create the extension lazily if NAME_PLATE_CREATED did not reach us
 			if not plate.carrier then OnNewNameplate(plate) end
 			OnShowNameplate(plate, unitid)
@@ -981,6 +994,8 @@ do
 
 		if plate then OnHealthUpdate(plate) end
 	end
+
+	CoreEvents.UNIT_HEALTH = CoreEvents.UNIT_HEALTH_FREQUENT
 
 	function CoreEvents:PLAYER_REGEN_ENABLED()
 		InCombat = false
@@ -1061,7 +1076,12 @@ do
 	-- Registration of Blizzard Events
 	TidyPlatesCore:SetFrameStrata("TOOLTIP") 	-- When parented to WorldFrame, causes OnUpdate handler to run close to last
 	TidyPlatesCore:SetScript("OnEvent", EventHandler)
-	for eventName in pairs(CoreEvents) do TidyPlatesCore:RegisterEvent(eventName) end
+	-- pcall: an event the client does not know would otherwise abort loading the whole core
+	for eventName in pairs(CoreEvents) do
+		if not pcall(TidyPlatesCore.RegisterEvent, TidyPlatesCore, eventName) and TidyPlatesDebug then
+			print("TidyPlates: could not register "..eventName)
+		end
+	end
 end
 
 
