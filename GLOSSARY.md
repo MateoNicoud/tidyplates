@@ -27,3 +27,11 @@ _Avoid_: Plugin, module
 **Forever**:
 The target client, WoW Forever (Interface 16001).
 _Avoid_: Camelot, Classic
+
+**Talent group**:
+One of the two sets of talent points a character can switch between (dual spec). Shown to players as "Primary" and "Secondary" (French: "Principale" and "Secondaire"). A Profile can be assigned to each one.
+_Avoid_: Spec, Specialization (Forever has no class specializations; points are spread across talent trees)
+
+**Group role**:
+The role (tank, healer or damage) assigned to the player in a group. When present, it picks the Profile; otherwise the Profile of the active Talent group applies.
+_Avoid_: Spec role
