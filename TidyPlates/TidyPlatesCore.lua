@@ -911,7 +911,7 @@ do
 	-- Frequently Used Event-handling Functions
 	----------------------------------------
 	-- Update individual plate
-	local function UnitConditionChanged(unitid)
+	local function UnitConditionChanged(_, unitid)	-- EventHandler passes the event name first
 		--local unitid = ...
 		--if not unitid then return end
 		local plate = GetNamePlateForUnit(unitid)
@@ -925,8 +925,7 @@ do
 	end
 
 	-- Update spell currently being cast
-	local function UnitSpellcastMidway(...)
-		local unitid = ...
+	local function UnitSpellcastMidway(_, unitid)
 
 		if UnitIsUnit("player", unitid) or not ShowCastBars then return end
 

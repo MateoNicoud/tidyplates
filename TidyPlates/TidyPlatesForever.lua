@@ -4,6 +4,17 @@
 -- True only on the WoW Forever client (Camelot project).
 TidyPlatesForever = (WOW_PROJECT_CAMELOT ~= nil and WOW_PROJECT_ID == WOW_PROJECT_CAMELOT) and true or false
 
+-- Polyfills for APIs that moved into C_ namespaces. Only defined when the global is missing.
+if not GetAddOnMetadata and C_AddOns then GetAddOnMetadata = C_AddOns.GetAddOnMetadata end
+if not GetSpellInfo and C_Spell and C_Spell.GetSpellInfo then
+	-- Old signature: name, rank, icon, castTime, minRange, maxRange, spellID
+	function GetSpellInfo(spell)
+		local info = C_Spell.GetSpellInfo(spell)
+		if not info then return nil end
+		return info.name, nil, info.iconID, info.castTime, info.minRange, info.maxRange, info.spellID
+	end
+end
+
 -- /tidydebug toggles TidyPlatesDebug, which gates the core's debug prints.
 -- Output goes to the chat window so it can be copied.
 SLASH_TIDYDEBUG1 = '/tidydebug'

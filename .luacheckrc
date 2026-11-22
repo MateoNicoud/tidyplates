@@ -6,7 +6,7 @@ exclude_files = { "TidyPlates/BackupCore.lua", "TidyPlatesWidgets/_RangeWidget.l
 
 -- Globals the addons define and share.
 globals = {
-	"TidyPlates", "TidyPlatesDebug", "TidyPlatesForever", "TidyPlatesEnableBackdrop", "TidyPlatesOptions",
+	"TidyPlates", "TidyPlatesDebug", "TidyPlatesForever", "GetAddOnMetadata", "GetSpellInfo", "TidyPlatesEnableBackdrop", "TidyPlatesOptions",
 	"TidyPlatesUtility", "TidyPlatesThemeList", "TidyPlatesHubMenus",
 	"TidyPlatesHubSettings", "TidyPlatesHubGlobal", "TidyPlatesHubCache",
 	"TidyPlatesSlashCommands", "SlashCmdList",
@@ -42,7 +42,7 @@ read_globals = {
 	"UnitPlayerOrPetInParty", "UnitPlayerControlled", "UnitPVPName", "UnitLevel", "UnitIsTapDenied", "UnitIsFriend",
 	"UnitFactionGroup", "UnitEffectiveLevel", "UnitClassification", "UNIT_LEVEL_TEMPLATE", "UIDropDownMenu_AddButton",
 	"NAMEPLATE_FONT", "IsActiveBattlefieldArena", "HideUIPanel", "GetNumBattlefieldScores", "GetCreatureDifficultyColor",
-	"GetComboPoints", "GetBuildInfo", "GetBattlefieldScore", "GetAddOnMetadata", "GetActiveSpecGroup",
+	"GetComboPoints", "GetBuildInfo", "GetBattlefieldScore", "GetActiveSpecGroup",
 	"RequestBattlefieldScoreData", "CombatLogGetCurrentEventInfo", "COMBATLOG_OBJECT_REACTION_FRIENDLY",
 	"COMBATLOG_OBJECT_CONTROL_PLAYER", "SHOW_CLASS_COLOR_IN_V_KEY", "OPTION_TOOLTIP_SHOW_CLASS_COLOR_IN_V_KEY",
 	"UNIT_NAMEPLATES_SHOW_FRIENDS", "UNIT_NAMEPLATES_SHOW_FRIENDLY_TOTEMS", "UNIT_NAMEPLATES_SHOW_FRIENDLY_PETS",
