@@ -591,8 +591,15 @@ do
 		unit.red, unit.green, unit.blue = UnitSelectionColor(unitid)
 		unit.reaction = GetReactionByColor(unit.red, unit.green, unit.blue) or "HOSTILE"
 
-		unit.health = UnitHealth(unitid) or 0
-		unit.healthmax = UnitHealthMax(unitid) or 1
+		-- Raw values go to the health bar only. On enemy units the client returns "secret" numbers that
+		-- Lua cannot compare, so everything else sees plain full-health values instead.
+		extended.healthRaw = UnitHealth(unitid) or 0
+		extended.healthmaxRaw = UnitHealthMax(unitid) or 1
+		if issecretvalue and (issecretvalue(extended.healthRaw) or issecretvalue(extended.healthmaxRaw)) then
+			unit.health, unit.healthmax = 1, 1
+		else
+			unit.health, unit.healthmax = extended.healthRaw, extended.healthmaxRaw
+		end
 
 		unit.threatValue = UnitThreatSituation("player", unitid) or 0
 		unit.threatSituation = ThreatReference[unit.threatValue]
@@ -645,8 +652,8 @@ do
 
 	-- UpdateIndicator_HealthBar: Updates the value on the health bar
 	function UpdateIndicator_HealthBar()
-		visual.healthbar:SetMinMaxValues(0, unit.healthmax)
-		visual.healthbar:SetValue(unit.health)
+		visual.healthbar:SetMinMaxValues(0, extended.healthmaxRaw or unit.healthmax)
+		visual.healthbar:SetValue(extended.healthRaw or unit.health)
 	end
 
 
