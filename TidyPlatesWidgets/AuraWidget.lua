@@ -72,7 +72,9 @@ local function InitButton(widget, button)
 
 	button.Border = button:CreateTexture(nil, "ARTWORK")
 
-	button.Count = button.Cooldown:CreateFontString(nil, "OVERLAY")
+	-- The client sets text on this string as soon as it is bound, so it needs a font first
+	button.Count = button.Cooldown:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
+	button.Count:SetFont(AuraFont, 10, "OUTLINE")
 	button:SetApplicationCount(button.Count)
 
 	StyleButton(button)
