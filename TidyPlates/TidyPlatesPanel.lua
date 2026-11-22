@@ -40,6 +40,13 @@ local DefaultProfile = "Damage"
 
 local ActiveProfile = "None"
 
+-- Panel labels. Forever has two talent groups (dual spec), not class specializations.
+local Labels = {
+	enUS = { primary = "Primary Talents", secondary = "Secondary Talents", active = "Active", useRole = "Use group role for the profile", distance = "Nameplate Distance" },
+	frFR = { primary = "Principale", secondary = "Secondaire", active = "active", useRole = "Utiliser le rôle de groupe", distance = "Distance des plaques" },
+}
+local L = Labels[GetLocale()] or Labels.enUS
+
 TidyPlatesOptions = {
 
 	ActiveTheme = FirstTryTheme,
@@ -48,6 +55,8 @@ TidyPlatesOptions = {
 	SecondSpecProfile = DefaultProfile,
 	ThirdSpecProfile = DefaultProfile,
 	FourthSpecProfile = DefaultProfile,
+	UseGroupRole = true,
+	NameplateDistance = false,		-- false: leave the client value alone
 
 	FriendlyAutomation = NO_AUTOMATION,
 	EnemyAutomation = NO_AUTOMATION,
@@ -111,6 +120,19 @@ end
 -------------------------------------------------------------------------------------
 local ThemeDropdownMenuItems = {}
 
+-- Nameplate view distance. The CVar cannot be changed in combat, so a request made then waits for it to end.
+local DISTANCE_CVAR = "nameplateMaxDistance"
+local DISTANCE_MIN, DISTANCE_MAX = 20, 60
+local distancePending = false
+
+local function ApplyNameplateDistance()
+	local distance = TidyPlatesOptions.NameplateDistance
+	if not distance then return end
+	if InCombatLockdown() then distancePending = true; return end
+	distancePending = false
+	SetCVar(DISTANCE_CVAR, distance)
+end
+
 local function ApplyAutomationSettings()
 	SetCastBars(not TidyPlatesOptions.DisableCastBars)
 	TidyPlates.OverrideFonts( TidyPlatesOptions.ForceBlizzardFont)
@@ -123,6 +145,42 @@ local function ApplyAutomationSettings()
 	TidyPlates:ForceUpdate()
 end
 
+-- Hub profiles are only known once the Hub has registered them; until then accept any name
+local function IsKnownProfile(name)
+	if #HubProfileList == 0 then return true end
+	for _, item in ipairs(HubProfileList) do
+		if item.value == name then return true end
+	end
+	return false
+end
+
+-- GetProfileForPlayer: the group role decides when there is one (a Shaman tank has no stance or aura
+-- that gives it away). Without a role, the profile chosen for the active talent group applies.
+local function GetProfileForPlayer()
+	if TidyPlatesOptions.UseGroupRole ~= false and UnitGroupRolesAssigned then
+		local role = UnitGroupRolesAssigned("player")
+		local profile = (role == "TANK" and "Tank") or (role == "HEALER" and "Healer") or (role == "DAMAGER" and "Damage") or nil
+		if profile and IsKnownProfile(profile) then return profile end
+	end
+
+	local talentGroup = GetActiveSpecGroup and GetActiveSpecGroup() or 1
+	if talentGroup == 2 then return TidyPlatesOptions.SecondSpecProfile or DefaultProfile end
+	return TidyPlatesOptions.FirstSpecProfile or DefaultProfile
+end
+
+-- ApplyProfile: switches the Hub profile if the wanted one changed
+local function ApplyProfile()
+	local profile = GetProfileForPlayer()
+	if profile == ActiveProfile then return end
+	ActiveProfile = profile
+
+	local theme = TidyPlates:GetTheme()
+	if theme and theme.OnChangeProfile then theme:OnChangeProfile(ActiveProfile) end
+
+	TidyPlates:ResetWidgets()
+	TidyPlates:ForceUpdate()
+end
+
 local function ApplyPanelSettings()
 
 	-- Theme
@@ -132,34 +190,9 @@ local function ApplyPanelSettings()
 	--TidyPlatesOptions.ActiveTheme = TidyPlatesInternal.activeThemeName
 	--local theme = TidyPlatesThemeList[TidyPlatesInternal.activeThemeName]
 
-	-- Load Hub Profile
-	ActiveProfile = DefaultProfile
-
-	local currentSpec = GetSpecialization()
-
-	if currentSpec == 4 then
-		ActiveProfile = TidyPlatesOptions.FourthSpecProfile
-	elseif currentSpec == 3 then
-		ActiveProfile = TidyPlatesOptions.ThirdSpecProfile
-	elseif currentSpec == 2 then
-		ActiveProfile = TidyPlatesOptions.SecondSpecProfile
-	else
-		ActiveProfile = TidyPlatesOptions.FirstSpecProfile
-	end
-
-	local _, specname = GetSpecializationInfo(currentSpec)
-
-	local theme = TidyPlates:GetTheme()
-
-	if theme and theme.OnChangeProfile then theme:OnChangeProfile(ActiveProfile) end
-
-	-- Store it for external usage
-	--TidyPlatesOptions.ActiveProfile = ActiveProfile
-	-- ** Use TidyPlates:GetProfile()
-
-	-- Reset Widgets
-	TidyPlates:ResetWidgets()
-	TidyPlates:ForceUpdate()
+	-- Load Hub Profile (the theme may just have been reloaded, so force it to be applied again)
+	ActiveProfile = nil
+	ApplyProfile()
 end
 
 
@@ -173,6 +206,7 @@ local function GetPanelValues(panel)
 	TidyPlatesOptions.EnemyAutomation = panel.AutoShowEnemy:GetValue()
 	TidyPlatesOptions.DisableCastBars = panel.DisableCastBars:GetChecked()
 	TidyPlatesOptions.ForceBlizzardFont = panel.ForceBlizzardFont:GetChecked()
+	TidyPlatesOptions.UseGroupRole = panel.UseGroupRole:GetChecked() and true or false
 	TidyPlatesOptions.PrimaryProfile = panel.FirstSpecDropdown:GetValue()
 
 	TidyPlatesOptions.FirstSpecProfile = panel.FirstSpecDropdown:GetValue()
@@ -183,8 +217,10 @@ end
 
 
 local function SetPanelValues(panel)
-	panel.ActiveThemeDropdown:SetValue(TidyPlatesOptions.ActiveTheme)
+	panel.ActiveThemeDropdown:SetValue(TidyPlatesOptions.ActiveTheme or FirstTryTheme)	-- same fallback the core uses
 
+	panel.UseGroupRole:SetChecked(TidyPlatesOptions.UseGroupRole ~= false)
+	panel.NameplateDistance:SetValue(TidyPlatesOptions.NameplateDistance or tonumber(GetCVar(DISTANCE_CVAR)) or 41)
 	panel.FirstSpecDropdown:SetValue(TidyPlatesOptions.FirstSpecProfile)
 	panel.SecondSpecDropdown:SetValue(TidyPlatesOptions.SecondSpecProfile)
 	panel.ThirdSpecDropdown:SetValue(TidyPlatesOptions.ThirdSpecProfile)
@@ -220,50 +256,12 @@ local function OnRefresh(panel)
 	SetPanelValues(panel)
 
 	------------------------
-	-- Spec Notes
+	-- Talent group labels
 	------------------------
-	local currentSpec = GetSpecialization()
-
-	------------------------
-	-- First Spec Details
-	------------------------
-	local id, name = GetSpecializationInfo(1)
-
-	if name then
-		if currentSpec == 1 then name = name.." (Active)" end
-		panel.FirstSpecLabel:SetText(name)
-	end
-	------------------------
-	-- Second Spec Details
-	------------------------
-	local id, name = GetSpecializationInfo(2)
-
-	if name then
-		if currentSpec == 2 then name = name.." (Active)" end
-		panel.SecondSpecLabel:SetText(name)
-	end
-	------------------------
-	-- Third Spec Details
-	------------------------
-	local id, name = GetSpecializationInfo(3)
-
-	if name then
-		if currentSpec == 3 then name = name.." (Active)" end
-		panel.ThirdSpecLabel:SetText(name)
-		panel.ThirdSpecLabel:Show()
-		panel.ThirdSpecDropdown:Show()
-	end
-	------------------------
-	-- Fourth Spec Details
-	------------------------
-	local id, name = GetSpecializationInfo(4)
-
-	if name then
-		if currentSpec == 4 then name = name.." (Active)" end
-		panel.FourthSpecLabel:SetText(name)
-		panel.FourthSpecLabel:Show()
-		panel.FourthSpecDropdown:Show()
-	end
+	local activeGroup = GetActiveSpecGroup and GetActiveSpecGroup() or 1
+	local activeSuffix = " ("..L.active..")"
+	panel.FirstSpecLabel:SetText(L.primary..(activeGroup == 1 and activeSuffix or ""))
+	panel.SecondSpecLabel:SetText(L.secondary..(activeGroup == 2 and activeSuffix or ""))
 
 end
 
@@ -293,6 +291,7 @@ local function CreateMenuTables()
 end
 
 local function BuildInterfacePanel(panel)
+	TidyPlatesEnableBackdrop(panel)
 	panel:SetBackdrop({bgFile = "Interface/Tooltips/UI-Tooltip-Background", insets = { left = 2, right = 2, top = 2, bottom = 2 },})
 	panel:SetBackdropColor(0.06, 0.06, 0.06, .7)
 
@@ -344,7 +343,7 @@ local function BuildInterfacePanel(panel)
 	panel.FirstSpecLabel:SetPoint("TOPLEFT", panel.ProfileLabel,"BOTTOMLEFT", 0, -4)
 	panel.FirstSpecLabel:SetWidth(170)
 	panel.FirstSpecLabel:SetJustifyH("LEFT")
-	panel.FirstSpecLabel:SetText("First Spec")
+	panel.FirstSpecLabel:SetText(L.primary)
 
 	panel.FirstSpecDropdown = PanelHelpers:CreateDropdownFrame("TidyPlatesFirstSpecDropdown", panel, HubProfileList, DefaultProfile, nil, true)
 	panel.FirstSpecDropdown:SetPoint("TOPLEFT", panel.FirstSpecLabel, "BOTTOMLEFT", -20, -2)
@@ -359,7 +358,9 @@ local function BuildInterfacePanel(panel)
 
 	panel.ThirdSpecDropdown = PanelHelpers:CreateDropdownFrame("TidyPlatesThirdSpecDropdown", panel, HubProfileList, DefaultProfile, nil, true)
 	panel.ThirdSpecDropdown:SetPoint("TOPLEFT", panel.ThirdSpecLabel, "BOTTOMLEFT", -20, -2)
+	-- Forever has two talent groups only: the third and fourth slots stay hidden
 	panel.ThirdSpecLabel:Hide()
+	panel.ThirdSpecDropdown:Hide()
 
 	---------------
 	-- Column 2
@@ -369,7 +370,7 @@ local function BuildInterfacePanel(panel)
 	panel.SecondSpecLabel:SetPoint("TOPLEFT", panel.FirstSpecLabel,"TOPLEFT", 180, 0)
 	panel.SecondSpecLabel:SetWidth(170)
 	panel.SecondSpecLabel:SetJustifyH("LEFT")
-	panel.SecondSpecLabel:SetText("Second Spec")
+	panel.SecondSpecLabel:SetText(L.secondary)
 
 	panel.SecondSpecDropdown = PanelHelpers:CreateDropdownFrame("TidyPlatesSecondSpecDropdown", panel, HubProfileList, DefaultProfile, nil, true)
 	panel.SecondSpecDropdown:SetPoint("TOPLEFT",panel.SecondSpecLabel, "BOTTOMLEFT", -20, -2)
@@ -393,7 +394,7 @@ local function BuildInterfacePanel(panel)
 	panel.AutomationLabel = panel:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
 	panel.AutomationLabel:SetFont(font, 22)
 	panel.AutomationLabel:SetText("Automation")
-	panel.AutomationLabel:SetPoint("TOPLEFT", panel.ThirdSpecDropdown, "BOTTOMLEFT", 20, -20)
+	panel.AutomationLabel:SetPoint("TOPLEFT", panel.FirstSpecDropdown, "BOTTOMLEFT", 20, -20)
 	panel.AutomationLabel:SetTextColor(255/255, 105/255, 6/255)
 
 
@@ -445,6 +446,28 @@ local function BuildInterfacePanel(panel)
 	panel.ForceBlizzardFont = PanelHelpers:CreateCheckButton("TidyPlatesOptions_ForceBlizzardFont", panel, "Force Multi-Lingual Font (Requires /reload)")
 	panel.ForceBlizzardFont:SetPoint("TOPLEFT", panel.DisableCastBars, "TOPLEFT", 0, -35)
 	panel.ForceBlizzardFont:SetScript("OnClick", function(self) TidyPlates.OverrideFonts( self:GetChecked()); end)
+
+	-- Group role decides the profile when there is one
+	panel.UseGroupRole = PanelHelpers:CreateCheckButton("TidyPlatesOptions_UseGroupRole", panel, L.useRole)
+	panel.UseGroupRole:SetPoint("TOPLEFT", panel.ForceBlizzardFont, "TOPLEFT", 0, -35)
+	panel.UseGroupRole:SetScript("OnClick", function(self)
+		TidyPlatesOptions.UseGroupRole = self:GetChecked() and true or false
+		ApplyProfile()
+	end)
+
+	-- Nameplate distance (only written once the player moves the slider)
+	panel.NameplateDistance = PanelHelpers:CreateSliderFrame("TidyPlatesOptions_NameplateDistance", panel, L.distance,
+		tonumber(GetCVar(DISTANCE_CVAR)) or 41, DISTANCE_MIN, DISTANCE_MAX, 1, "ACTUAL")
+	panel.NameplateDistance:SetPoint("TOPLEFT", panel.UseGroupRole, "TOPLEFT", 6, -62)
+	panel.NameplateDistance:SetWidth(200)
+	panel.NameplateDistance:SetScript("OnValueChanged", function(self, value, userInput)
+		value = floor(value + 0.5)
+		self.Value:SetText(tostring(value))
+		if userInput then
+			TidyPlatesOptions.NameplateDistance = value
+			ApplyNameplateDistance()
+		end
+	end)
 
 	-- Reset
 	ResetButton = CreateFrame("Button", "TidyPlatesOptions_ResetButton", panel, "TidyPlatesPanelButtonTemplate")
@@ -498,10 +521,12 @@ end
 local panelevents = {}
 
 function panelevents:ACTIVE_TALENT_GROUP_CHANGED(self)
-	--print("Panel:Talent Group Changed")
-	ApplyPanelSettings()
-	--OnRefresh(TidyPlatesInterfacePanel)
+	ApplyProfile()
 end
+
+-- The group role can change when roles are assigned or the group changes
+function panelevents:PLAYER_ROLES_ASSIGNED() ApplyProfile() end
+function panelevents:GROUP_ROSTER_UPDATE() ApplyProfile() end
 
 function panelevents:PLAYER_ENTERING_WORLD()
 	--print("Panel:Player Entering World")
@@ -521,9 +546,11 @@ function panelevents:PLAYER_ENTERING_WORLD()
 
 	ApplyPanelSettings()
 	ApplyAutomationSettings()
+	ApplyNameplateDistance()
 end
 
 function panelevents:PLAYER_REGEN_ENABLED()
+	if distancePending then ApplyNameplateDistance() end
 	SetNameplateVisibility("nameplateShowEnemies", TidyPlatesOptions.EnemyAutomation, false)
 	SetNameplateVisibility("nameplateShowFriends", TidyPlatesOptions.FriendlyAutomation, false)
 end
@@ -555,7 +582,10 @@ function panelevents:PLAYER_LOGIN()
 end
 
 TidyPlatesInterfacePanel:SetScript("OnEvent", function(self, event, ...) panelevents[event](self, ...) end)
-for eventname in pairs(panelevents) do TidyPlatesInterfacePanel:RegisterEvent(eventname) end
+for eventname in pairs(panelevents) do
+	-- pcall: an event this client does not know must not stop the panel from loading
+	pcall(TidyPlatesInterfacePanel.RegisterEvent, TidyPlatesInterfacePanel, eventname)
+end
 
 -------------------------------------------------------------------------------------
 -- Slash Commands

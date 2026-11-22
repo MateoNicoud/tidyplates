@@ -449,6 +449,7 @@ DropDownMenuFrame:SetFrameStrata("TOOLTIP");
 DropDownMenuFrame:Hide()
 
 local Border = CreateFrame("Frame", nil, DropDownMenuFrame)
+TidyPlatesEnableBackdrop(Border)
 Border:SetBackdrop(
 		{	bgFile = "Interface/DialogFrame/UI-DialogBox-Background-Dark",
             edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
@@ -526,7 +527,6 @@ local function ShowDropdownMenu(sourceFrame, menu, clickScript)
 
 			if currentSelection == i or itemText == currentSelection then
 				region1:SetTextColor(1, .8, 0)
-				region1:SetFont(1, .8, 0)
 			else
 				region1:SetTextColor(1, 1, 1)
 			end
@@ -682,6 +682,7 @@ do
 		local colorbox = CreateFrame("Button", reference, parent)
 		colorbox:SetWidth(24)
 		colorbox:SetHeight(24)
+		TidyPlatesEnableBackdrop(colorbox)
 		colorbox:SetBackdrop({bgFile = "Interface\\ChatFrame\\ChatFrameColorSwatch",
 												edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
 												tile = false, tileSize = 16, edgeSize = 8,
@@ -809,7 +810,8 @@ do
 	local fixed = false
 
 	local function OpenInterfacePanel(panel)
-		if not fixed then
+		-- The old options window needs its category list expanded first; the Settings window does not
+		if not fixed and INTERFACEOPTIONS_ADDONCATEGORIES then
 
 			local panelName = panel.name
 			if not panelName then return end

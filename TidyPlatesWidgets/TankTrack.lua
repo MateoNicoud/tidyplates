@@ -28,9 +28,10 @@ end
 local function IsPlayerTank()
 --[[
 	-- Look at the Player's Specialization
-	local specializationIndex = tonumber(GetSpecialization())
+	-- Forever has no specializations: these APIs may be absent
+	local specializationIndex = GetSpecialization and tonumber(GetSpecialization())
 
-	if specializationIndex and GetSpecializationRole(specializationIndex) == "TANK" then
+	if specializationIndex and GetSpecializationRole and GetSpecializationRole(specializationIndex) == "TANK" then
 		playerTankRole = true
 	else
 		playerTankRole = false
@@ -64,28 +65,32 @@ local function UpdatePlayerRole()
 	local playerTankAura = false
 
 	-- Look at the Player's Specialization
-	local specializationIndex = tonumber(GetSpecialization())
+	-- Forever has no specializations: these APIs may be absent
+	local specializationIndex = GetSpecialization and tonumber(GetSpecialization())
 
-	if specializationIndex and GetSpecializationRole(specializationIndex) == "TANK" then
+	if specializationIndex and GetSpecializationRole and GetSpecializationRole(specializationIndex) == "TANK" then
 		playerTankRole = true
 	else
 		playerTankRole = false
 	end
 
-	-- Check Auras
-	for i = 1, 40 do
-		name, _, _, _, _, _, _, _, _, _, spellID = UnitBuff("player", i)	-- 11th
-		if TankAuras[tostring(spellID)] then
-			playerTankAura = true
+	-- Check Auras (UnitBuff may be absent; issue #5 moves aura reads to C_UnitAuras)
+	if UnitBuff then
+		for i = 1, 40 do
+			name, _, _, _, _, _, _, _, _, _, spellID = UnitBuff("player", i)	-- 11th
+			if TankAuras[tostring(spellID)] then
+				playerTankAura = true
+			end
 		end
 	end
 
 	-- Check Stances
-	if GetShapeshiftFormID() == 18 then -- Defensive Stance (Warrior)
+	local formID = GetShapeshiftFormID and GetShapeshiftFormID()
+	if formID == 18 then -- Defensive Stance (Warrior)
 		playerTankAura = true
 	end
 
-	if GetShapeshiftFormID() == 23 then -- Stance of the Sturdy Ox (Monk)
+	if formID == 23 then -- Stance of the Sturdy Ox (Monk)
 		playerTankAura = true
 	end
 

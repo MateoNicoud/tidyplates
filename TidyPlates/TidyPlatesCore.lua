@@ -15,7 +15,13 @@ local max = math.max
 local select, pairs, tostring  = select, pairs, tostring 			    -- Local function copy
 local CreateTidyPlatesStatusbar = CreateTidyPlatesStatusbar			    -- Local function copy
 local WorldFrame, UIParent = WorldFrame, UIParent
-local GetNamePlateForUnit = C_NamePlate.GetNamePlateForUnit
+-- Without C_NamePlate there is nothing to theme; fail soft so the addon still loads
+-- Unit events also fire for "target", "targettarget", etc.; the API errors on anything but a nameplate token
+local RawGetNamePlateForUnit = C_NamePlate and C_NamePlate.GetNamePlateForUnit
+local function GetNamePlateForUnit(unitid)
+	if not RawGetNamePlateForUnit or type(unitid) ~= "string" or not unitid:find("^nameplate") then return nil end
+	return RawGetNamePlateForUnit(unitid)
+end
 
 -- Internal Data
 local Plates, PlatesVisible, PlatesFading, GUID = {}, {}, {}, {}	            	-- Plate Lists
@@ -84,9 +90,12 @@ local OnNewNameplate
 -- Main Loop
 local OnUpdate
 local OnNewNameplate
-local ForEachPlate
+local ForEachPlate, HideBlizzardFrame
 
 -- UpdateReferences
+-- IsSecret: true for values the client hides from addon code (nil-safe on clients without the concept)
+local function IsSecret(value) return issecretvalue and issecretvalue(value) or false end
+
 local function UpdateReferences(plate)
 	nameplate = plate
 	extended = plate.extended
@@ -107,6 +116,26 @@ end
 do
 	-- Local References
 	local WorldGetNumChildren, WorldGetChildren = WorldFrame.GetNumChildren, WorldFrame.GetChildren
+
+	-- HideBlizzardFrame: keeps Blizzard's own nameplate UnitFrame invisible under the Tidy Plates one.
+	-- Uses alpha, not Hide(): the UnitFrame can be protected, and hiding it taints the UI.
+	-- The client resets it on its own updates, so hook Show/SetAlpha once per frame (post-hooks are taint-safe).
+	local function KeepInvisible(plate, blizzFrame)
+		if plate.extended and plate.extended.Active and blizzFrame:GetAlpha() > 0 then blizzFrame:SetAlpha(0) end
+	end
+
+	function HideBlizzardFrame(plate)
+		local blizzFrame = plate.UnitFrame or plate:GetChildren()
+		if not blizzFrame or blizzFrame == plate.carrier then return end
+		-- Forbidden frames (e.g. some plates in instances) must not be touched by addon code
+		if blizzFrame.IsForbidden and blizzFrame:IsForbidden() then return end
+		blizzFrame:SetAlpha(0)
+		if not blizzFrame.tidyHooked then
+			blizzFrame.tidyHooked = true
+			hooksecurefunc(blizzFrame, "Show", function(self) KeepInvisible(plate, self) end)
+			hooksecurefunc(blizzFrame, "SetAlpha", function(self) KeepInvisible(plate, self) end)
+		end
+	end
 
 	-- ForEachPlate
 	function ForEachPlate(functionToRun, ...)
@@ -144,7 +173,7 @@ do
 				plate.UpdateMe = false
 				plate.UpdateHealth = false
 
-				plate:GetChildren():Hide()
+				HideBlizzardFrame(plate)
 
 			end
 
@@ -388,8 +417,16 @@ do
 
 	-- OnHideNameplate
 	function OnHideNameplate(plate, unitid)
+		-- Plates we never set up (e.g. the personal bar) have no carrier
+		if not (plate and plate.carrier and plate.extended) then return end
 		--plate.extended:Hide()
 		plate.carrier:Hide()
+
+		-- Give the Blizzard frame back (the plate may be reused for a unit we do not theme)
+		local blizzFrame = plate.UnitFrame or plate:GetChildren()
+		if blizzFrame and blizzFrame ~= plate.carrier and not (blizzFrame.IsForbidden and blizzFrame:IsForbidden()) then
+			plate.extended.Active = false; blizzFrame:SetAlpha(1)
+		end
 
 		UpdateReferences(plate)
 
@@ -566,8 +603,15 @@ do
 		unit.red, unit.green, unit.blue = UnitSelectionColor(unitid)
 		unit.reaction = GetReactionByColor(unit.red, unit.green, unit.blue) or "HOSTILE"
 
-		unit.health = UnitHealth(unitid) or 0
-		unit.healthmax = UnitHealthMax(unitid) or 1
+		-- Raw values go to the health bar only. On enemy units the client returns "secret" numbers that
+		-- Lua cannot compare, so everything else sees plain full-health values instead.
+		extended.healthRaw = UnitHealth(unitid) or 0
+		extended.healthmaxRaw = UnitHealthMax(unitid) or 1
+		if issecretvalue and (issecretvalue(extended.healthRaw) or issecretvalue(extended.healthmaxRaw)) then
+			unit.health, unit.healthmax = 1, 1
+		else
+			unit.health, unit.healthmax = extended.healthRaw, extended.healthmaxRaw
+		end
 
 		unit.threatValue = UnitThreatSituation("player", unitid) or 0
 		unit.threatSituation = ThreatReference[unit.threatValue]
@@ -620,8 +664,8 @@ do
 
 	-- UpdateIndicator_HealthBar: Updates the value on the health bar
 	function UpdateIndicator_HealthBar()
-		visual.healthbar:SetMinMaxValues(0, unit.healthmax)
-		visual.healthbar:SetValue(unit.health)
+		visual.healthbar:SetMinMaxValues(0, extended.healthmaxRaw or unit.healthmax)
+		visual.healthbar:SetValue(extended.healthRaw or unit.health)
 	end
 
 
@@ -807,24 +851,44 @@ do
 
 		if channeled then
 			name, text, texture, startTime, endTime, isTradeSkill, notInterruptible = UnitChannelInfo(unitid)
-			--name, text, texture, startTimeMS, endTimeMS, isTradeSkill, notInterruptible = UnitChannelInfo("unit")
-
-			castBar:SetScript("OnUpdate", OnUpdateCastBarReverse)
 		else
 			name, text, texture, startTime, endTime, isTradeSkill, castID, notInterruptible = UnitCastingInfo(unitid)
-			castBar:SetScript("OnUpdate", OnUpdateCastBarForward)
 		end
 
-		if isTradeSkill then return end
+		if not IsSecret(isTradeSkill) and isTradeSkill then return end
+
+		-- Cast data may be "secret": Lua cannot compare or calculate with it, only hand it to widgets.
+		-- So timing comes from a duration object driving the bar, and the shield from an alpha toggle.
+		local duration
+		if channeled then duration = UnitChannelDuration and UnitChannelDuration(unitid)
+		else duration = UnitCastingDuration and UnitCastingDuration(unitid) end
+
+		if duration and castBar.SetTimerDuration and Enum and Enum.StatusBarInterpolation and Enum.StatusBarTimerDirection then
+			castBar:SetScript("OnUpdate", nil)
+			castBar:SetTimerDuration(duration, Enum.StatusBarInterpolation.Immediate,
+				channeled and Enum.StatusBarTimerDirection.RemainingTime or Enum.StatusBarTimerDirection.ElapsedTime)
+		elseif startTime and endTime and not IsSecret(startTime) and not IsSecret(endTime) then
+			castBar:SetScript("OnUpdate", channeled and OnUpdateCastBarReverse or OnUpdateCastBarForward)
+			castBar:SetMinMaxValues( startTime, endTime )
+		else
+			-- The cast ended before we got here, or its timing cannot be read: show nothing rather than stale progress
+			castBar:SetScript("OnUpdate", nil)
+			castBar:Hide()
+			unit.isCasting = false
+			return
+		end
 
 		unit.isCasting = true
-		unit.spellIsShielded = notInterruptible
+		if IsSecret(notInterruptible) then
+			-- Themes only ever see a plain boolean; the real value drives the shield texture below
+			unit.spellIsShielded = false
+		else
+			unit.spellIsShielded = notInterruptible and true or false
+		end
 		unit.spellInterruptible = not unit.spellIsShielded
 
 		visual.spelltext:SetText(text)
 		visual.spellicon:SetTexture(texture)
-
-		castBar:SetMinMaxValues( startTime, endTime ) 
 
 		local r, g, b, a = 1, 1, 0, 1
 
@@ -837,9 +901,16 @@ do
 
 		castBar:SetAlpha(a or 1)
 
-		if unit.spellIsShielded then
-			   visual.castnostop:Show(); visual.castborder:Hide()
-		else visual.castnostop:Hide(); visual.castborder:Show() end
+		if IsSecret(notInterruptible) and visual.castnostop.SetAlphaFromBoolean then
+			visual.castnostop:Show(); visual.castborder:Show()
+			visual.castnostop:SetAlphaFromBoolean(notInterruptible, 1, 0)
+			visual.castborder:SetAlphaFromBoolean(notInterruptible, 0, 1)
+		else
+			visual.castnostop:SetAlpha(1); visual.castborder:SetAlpha(1)
+			if unit.spellIsShielded then
+				visual.castnostop:Show(); visual.castborder:Hide()
+			else visual.castnostop:Hide(); visual.castborder:Show() end
+		end
 
 		UpdateIndicator_CustomScaleText()
 		UpdateIndicator_CustomAlpha()
@@ -873,7 +944,11 @@ do
 		local currentTime = GetTime() * 1000
 
 		-- Check to see if there's a spell being cast
-		if UnitCastingInfo(unitid) then OnStartCasting(plate, unitid, false)
+		-- (duration objects exist only while a cast runs, and unlike the cast info they are never secret to test)
+		if UnitCastingDuration then
+			if UnitCastingDuration(unitid) then OnStartCasting(plate, unitid, false)
+			elseif UnitChannelDuration and UnitChannelDuration(unitid) then OnStartCasting(plate, unitid, true) end
+		elseif UnitCastingInfo(unitid) then OnStartCasting(plate, unitid, false)
 		else
 		-- See if one is being channeled...
 			if UnitChannelInfo(unitid) then OnStartCasting(plate, unitid, true) end
@@ -894,7 +969,7 @@ do
 	-- Frequently Used Event-handling Functions
 	----------------------------------------
 	-- Update individual plate
-	local function UnitConditionChanged(unitid)
+	local function UnitConditionChanged(_, unitid)	-- EventHandler passes the event name first
 		--local unitid = ...
 		--if not unitid then return end
 		local plate = GetNamePlateForUnit(unitid)
@@ -908,8 +983,7 @@ do
 	end
 
 	-- Update spell currently being cast
-	local function UnitSpellcastMidway(...)
-		local unitid = ...
+	local function UnitSpellcastMidway(_, unitid)
 
 		if UnitIsUnit("player", unitid) or not ShowCastBars then return end
 
@@ -936,7 +1010,7 @@ do
 
 	function CoreEvents:NAME_PLATE_CREATED(...)
 		local plate = ...
-		local BlizzardFrame = plate:GetChildren()
+		if plate.IsForbidden and plate:IsForbidden() then return end
 
 		-- hooksecurefunc([table,] "function", hookfunc)
 
@@ -951,9 +1025,10 @@ do
 		local plate = GetNamePlateForUnit(unitid);
 
 		-- We're not going to theme the personal unit bar
-		if plate and not UnitIsUnit("player", unitid) then
-			local childFrame = plate:GetChildren()
-			if childFrame then childFrame:Hide() end
+		if plate and not (plate.IsForbidden and plate:IsForbidden()) and not UnitIsUnit("player", unitid) then
+			HideBlizzardFrame(plate)
+			-- Create the extension lazily if NAME_PLATE_CREATED did not reach us
+			if not plate.carrier then OnNewNameplate(plate) end
 			OnShowNameplate(plate, unitid)
 		end
 
@@ -1057,7 +1132,19 @@ do
 	-- Registration of Blizzard Events
 	TidyPlatesCore:SetFrameStrata("TOOLTIP") 	-- When parented to WorldFrame, causes OnUpdate handler to run close to last
 	TidyPlatesCore:SetScript("OnEvent", EventHandler)
-	for eventName in pairs(CoreEvents) do TidyPlatesCore:RegisterEvent(eventName) end
+	-- pcall: an event the client does not know would otherwise abort loading the whole core
+	local registered = {}
+	for eventName in pairs(CoreEvents) do
+		registered[eventName] = pcall(TidyPlatesCore.RegisterEvent, TidyPlatesCore, eventName)
+		if not registered[eventName] and TidyPlatesDebug then
+			print("TidyPlates: could not register "..eventName)
+		end
+	end
+	-- Clients without the "frequent" health event only have UNIT_HEALTH; use one of the two, never both
+	if not registered.UNIT_HEALTH_FREQUENT then
+		CoreEvents.UNIT_HEALTH = CoreEvents.UNIT_HEALTH_FREQUENT
+		pcall(TidyPlatesCore.RegisterEvent, TidyPlatesCore, "UNIT_HEALTH")
+	end
 end
 
 
@@ -1069,13 +1156,17 @@ end
 do
 	-- Helper Functions
 	local function SetObjectShape(object, width, height) object:SetWidth(width); object:SetHeight(height) end
-	local function SetObjectJustify(object, horz, vert) object:SetJustifyH(horz); object:SetJustifyV(vert) end
+	local function SetObjectJustify(object, horz, vert)
+		if vert == "CENTER" then vert = "MIDDLE" end	-- vertical justify only accepts TOP, MIDDLE, BOTTOM
+		object:SetJustifyH(horz); object:SetJustifyV(vert)
+	end
 	local function SetObjectAnchor(object, anchor, anchorTo, x, y) object:ClearAllPoints();object:SetPoint(anchor, anchorTo, anchor, x, y) end
 	local function SetObjectTexture(object, texture) object:SetTexture(texture) end
 	local function SetObjectBartexture(obj, tex, ori, crop) obj:SetStatusBarTexture(tex); obj:SetOrientation(ori); end
 
 	local function SetObjectFont(object,  font, size, flags)
 		if (not OverrideFonts) and font then
+			if flags == "NONE" then flags = "" end	-- this client rejects "NONE"
 			object:SetFont(font, size or 10, flags)
 		--else
 		--	object:SetFontObject("SpellFont_Small")

@@ -96,6 +96,7 @@ local function CreateQuickSlider(name, label, ... ) --, neighborFrame, xOffset, 
 		-- Border
 		frame.BorderFrame:SetPoint("TOPLEFT", 0, 5)
 		frame.BorderFrame:SetPoint("BOTTOMRIGHT", 3, -5)
+		TidyPlatesEnableBackdrop(frame.BorderFrame)
 		frame.BorderFrame:SetBackdrop({bgFile = "Interface/Tooltips/UI-Tooltip-Background",
 											edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
 											tile = true, tileSize = 16, edgeSize = 16,
@@ -112,7 +113,7 @@ local function CreateQuickSlider(name, label, ... ) --, neighborFrame, xOffset, 
 		EditBox:SetMultiLine(true)
 
 		EditBox:SetFrameLevel(frame:GetFrameLevel()-1)
-		EditBox:SetFont("Fonts\\FRIZQT__.TTF", 11, "NONE")
+		EditBox:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
 		EditBox:SetText("Empty")
 		EditBox:SetAutoFocus(false)
 		EditBox:SetTextInsets(9, 6, 2, 2)
@@ -460,6 +461,7 @@ local function CreateInterfacePanel( objectName, panelTitle, parentFrameName)
 	------------------------------
 	local panel = CreateFrame( "Frame", objectName.."_InterfaceOptionsPanel", UIParent);
 	panel.objectName = objectName
+	TidyPlatesEnableBackdrop(panel)
 	panel:SetBackdrop({	bgFile = "Interface/Tooltips/UI-Tooltip-Background", --bgFile = "Interface/FrameGeneral/UI-Background-Marble",
 						edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
 						edgeSize = 16,
@@ -488,6 +490,7 @@ local function CreateInterfacePanel( objectName, panelTitle, parentFrameName)
 	panel.WarningFrame:SetPoint("TOP", panel.MainLabel, "BOTTOM", 0, -8 )
         panel.WarningFrame:SetPoint("RIGHT", -16 , 16 )
         panel.WarningFrame:SetHeight(50)
+	TidyPlatesEnableBackdrop(panel.WarningFrame)
 	panel.WarningFrame:SetBackdrop({bgFile = "Interface/Tooltips/UI-Tooltip-Background",
 												edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
 												--tile = true, tileSize = 16,
@@ -527,6 +530,7 @@ local function CreateInterfacePanel( objectName, panelTitle, parentFrameName)
 	panel.ScrollFrameBorder = CreateFrame("Frame", objectName.."ScrollFrameBorder", panel.ScrollFrame )
 	panel.ScrollFrameBorder:SetPoint("TOPLEFT", -4, 5)
 	panel.ScrollFrameBorder:SetPoint("BOTTOMRIGHT", 3, -5)
+	TidyPlatesEnableBackdrop(panel.ScrollFrameBorder)
 	panel.ScrollFrameBorder:SetBackdrop({bgFile = "Interface/Tooltips/UI-Tooltip-Background",
 												edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
 												--tile = true, tileSize = 16,

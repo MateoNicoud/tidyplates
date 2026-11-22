@@ -33,7 +33,7 @@ end
 local function GetChiTarget()
 	if UnitCanAttack("player", "target") then
 
-		if SPEC_MONK_BREWMASTER == GetSpecialization() then return end
+		if GetSpecialization and SPEC_MONK_BREWMASTER == GetSpecialization() then return end
 
 		local points = UnitPower("player", SPELL_POWER_CHI)
 		local maxPoints = UnitPowerMax("player", SPELL_POWER_CHI)
