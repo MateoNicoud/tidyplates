@@ -39,24 +39,30 @@ end
 -------------------------------------------------------------
 -- Aura button look (called by the client for each button it creates)
 -------------------------------------------------------------
-local function StyleButton(button)
-	local w, h, art, texCoord
+-- Art that can change after the button exists. The button itself is a protected object once the client has
+-- created it: addon code may only size and anchor it inside initializeFrame, so later size changes go through
+-- the container layout (elementWidth/elementHeight), never through the button.
+local function SkinButton(button)
+	local art, texCoord
 	if useWideIcons then
-		w, h, art, texCoord = 26.5, 14.5, WideArt, { .07, 1-.07, .23, 1-.23 }
+		art, texCoord = WideArt, { .07, 1-.07, .23, 1-.23 }
 	else
-		w, h, art, texCoord = 16.5, 14.5, SquareArt, { .10, 1-.07, .12, 1-.12 }
+		art, texCoord = SquareArt, { .10, 1-.07, .12, 1-.12 }
 	end
-	button:SetSize(w, h)
-	button.Icon:SetAllPoints(button)
 	button.Icon:SetTexCoord(unpack(texCoord))
+	button.Border:SetTexture(art)
+end
+
+local function StyleButton(button)
+	button:SetSize(useWideIcons and 26.5 or 16.5, 14.5)
+	button.Icon:SetAllPoints(button)
 	button.Cooldown:SetAllPoints(button)
 	button.Border:SetSize(32, 32)
 	button.Border:ClearAllPoints()
 	button.Border:SetPoint("CENTER", useWideIcons and 1 or 0, -2)
-	button.Border:SetTexture(art)
-	button.Count:SetFont(AuraFont, 10, "OUTLINE")
 	button.Count:ClearAllPoints()
 	button.Count:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0, -2)
+	SkinButton(button)
 end
 
 local function InitButton(widget, button)
@@ -101,7 +107,7 @@ local function ConfigureContainer(widget)
 	container:SetAuraGroupMaxFrameCount(GROUP, DebuffLimit)
 	container:SetAuraGroupLayout(GROUP, GetLayout())
 	container:SetFlowLayoutMaximumLineSize(GetLayout().maximumLineSize)
-	for _, button in ipairs(widget.buttons) do StyleButton(button) end
+	for _, button in ipairs(widget.buttons) do pcall(SkinButton, button) end
 end
 
 local function UpdateWidgetContext(widget, unit)
