@@ -24,7 +24,8 @@ local FILTER_FRIENDLY = "HARMFUL"
 local FILTER_FRIENDLY_DISPEL = "HARMFUL|RAID_PLAYER_DISPELLABLE"
 
 local ContainerAvailable = C_XMLUtil and C_XMLUtil.GetTemplateInfo
-	and C_XMLUtil.GetTemplateInfo("CustomAuraContainerTemplate") and true or false
+	and C_XMLUtil.GetTemplateInfo("CustomAuraContainerTemplate")
+	and AuraContainerSortMethod and AuraContainerSortDirection and AnchorUtil and AnchorUtil.FlowDirection and true or false
 
 local AllWidgets = {}
 
@@ -108,16 +109,20 @@ local function UpdateWidgetContext(widget, unit)
 
 	if not unitid then
 		container:SetEnabled(false)
+		widget.auraUnit = nil
 		return
 	end
 
-	container:SetAuraGroupFilterString(GROUP, GetFilterString(unitid))
-	if container.unitToken == unitid and container.enabled then
+	local filter = GetFilterString(unitid)
+	container:SetAuraGroupFilterString(GROUP, filter)
+	if widget.auraUnit == unitid and widget.auraFilter == filter then
 		container:UpdateAllAuras()
 	else
 		container:SetEnabled(true)
 		container:SetUnit(unitid)
+		widget.auraUnit, widget.auraFilter = unitid, filter
 	end
+	widget:Show()
 	container:Show()
 end
 
@@ -152,6 +157,7 @@ local function CreateAuraWidget(parent)
 	widget._Hide = widget.Hide
 	widget.Hide = function(self)
 		if self.container then self.container:SetEnabled(false) end
+		self.auraUnit = nil
 		self:_Hide()
 	end
 
@@ -185,6 +191,7 @@ end
 local function SetAuraFilterOptions(options)
 	if type(options) == "table" then
 		FilterOptions.friendlyDispellable = options.friendlyDispellable and true or false
+		TidyPlates:ForceUpdate()
 	end
 end
 
